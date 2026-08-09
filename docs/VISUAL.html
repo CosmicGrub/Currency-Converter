@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ExchangeBoard — Visual Companion</title>
+<style>
+  body{margin:0;background:#0B1220;color:#EDEFF3;font-family:Inter,-apple-system,sans-serif;padding:32px;}
+  h1{font-size:22px;margin-bottom:4px;}
+  .eyebrow{color:#C9A227;font-size:11px;letter-spacing:.18em;font-weight:700;margin-bottom:8px;}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;max-width:640px;margin-top:24px;}
+  .panel{background:#121B2E;border:1px solid #1E2A44;border-radius:14px;padding:20px;}
+  .label{font-size:11px;letter-spacing:.1em;color:#8B94A7;font-weight:600;}
+  .big{font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:700;margin-top:8px;}
+  .accent{color:#C9A227;}
+  .muted{color:#8B94A7;font-size:13px;}
+  .chip{display:inline-block;padding:5px 10px;border-radius:999px;border:1px solid #24314F;color:#8B94A7;font-size:12px;margin-right:6px;}
+  .chip.active{border-color:#C9A227;color:#C9A227;background:rgba(201,162,39,.12);}
+  .status{margin-top:32px;font-size:13px;color:#5C6885;}
+  .status b{color:#EDEFF3;}
+</style>
+</head>
+<body>
+  <div class="eyebrow">EXCHANGE BOARD — VISUAL COMPANION</div>
+  <h1>ExchangeBoard v1.1.0</h1>
+  <div class="muted">Single evergreen reference — reflects current build + roadmap. Amend in place.</div>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="label">YOU HAVE</div>
+      <div class="big">$ <span>1.00</span> <span class="accent" style="font-size:14px;">USD</span></div>
+    </div>
+    <div class="panel">
+      <div class="label">CONVERT TO</div>
+      <div style="margin-top:8px;">Euro <span class="accent">(EUR)</span></div>
+      <div style="margin-top:10px;">
+        <span class="chip active">EUR</span><span class="chip">GBP</span><span class="chip">JPY</span>
+        <span class="chip">CAD</span><span class="chip">AUD</span><span class="chip">INR</span>
+        <span class="chip">CNY</span><span class="chip">MXN</span>
+      </div>
+    </div>
+    <div class="panel" style="text-align:center;background:linear-gradient(135deg,#16233D,#101A2E);">
+      <div class="label">1 USD EQUALS</div>
+      <div class="big">0.912 <span class="accent" style="font-size:18px;">EUR</span></div>
+      <div class="muted" style="margin-top:8px;">1 USD = €0.9120</div>
+    </div>
+  </div>
+
+  <div class="status">
+    <b>Build status:</b> Live conversion ✅ · Searchable dropdown ✅ · Ticker strip ✅ ·
+    Quick picks ✅ · Refresh/error states ✅ · Real Vite/React project + GitHub sync ✅<br>
+    <b>Roadmap (not yet built):</b> multi-currency baskets · historical rate charts ·
+    offline/cached rates · favorites persistence · reverse (non-USD) base · automated tests
+  </div>
+</body>
+</html>
