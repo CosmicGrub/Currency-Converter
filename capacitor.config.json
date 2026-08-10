@@ -1,0 +1,6 @@
+{
+  "appId": "com.cosmicgrub.exchangeboard",
+  "appName": "ExchangeBoard",
+  "webDir": "dist",
+  "backgroundColor": "#0B1220"
+}

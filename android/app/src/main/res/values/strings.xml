@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ExchangeBoard</string>
+    <string name="title_activity_main">ExchangeBoard</string>
+    <string name="package_name">com.cosmicgrub.exchangeboard</string>
+    <string name="custom_url_scheme">com.cosmicgrub.exchangeboard</string>
+</resources>
