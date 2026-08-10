@@ -1,8 +1,9 @@
 import { colors, fonts } from "../styles/tokens.js";
 import { fmt, rawNum } from "../lib/format.js";
 
-/** Live "1 USD EQUALS" result panel — handles loading/error/ready states. */
-export default function ResultPanel({ status, amount, target, rate, converted, onRetry }) {
+/** Live "X EQUALS" result panel — handles loading/error/ready states, and a
+ *  "stale/offline" badge when showing a cached rate table instead of a fresh fetch. */
+export default function ResultPanel({ status, amount, base, target, rate, converted, stale, onRetry }) {
   return (
     <div
       style={{
@@ -21,7 +22,7 @@ export default function ResultPanel({ status, amount, target, rate, converted, o
       {status === "error" && (
         <div>
           <p style={{ color: colors.error, fontSize: 14, marginBottom: 10 }}>
-            Couldn't reach the rates service. Check your connection.
+            Couldn't reach the rates service, and no cached rates are available.
           </p>
           <button
             onClick={onRetry}
@@ -40,7 +41,24 @@ export default function ResultPanel({ status, amount, target, rate, converted, o
         </div>
       )}
       {status === "ready" && converted !== null && (
-        <div key={target + amount} style={{ animation: "flipIn 0.18s ease-out" }}>
+        <div key={base + target + amount} style={{ animation: "flipIn 0.18s ease-out" }}>
+          {stale && (
+            <div
+              style={{
+                display: "inline-block",
+                fontSize: 10,
+                letterSpacing: "0.08em",
+                fontWeight: 700,
+                color: colors.error,
+                border: `1px solid ${colors.error}`,
+                borderRadius: 999,
+                padding: "2px 8px",
+                marginBottom: 10,
+              }}
+            >
+              OFFLINE — SHOWING CACHED RATES
+            </div>
+          )}
           <div
             style={{
               fontSize: 12,
@@ -49,7 +67,7 @@ export default function ResultPanel({ status, amount, target, rate, converted, o
               marginBottom: 8,
             }}
           >
-            {amount || 0} USD EQUALS
+            {amount || 0} {base} EQUALS
           </div>
           <div
             style={{
@@ -63,7 +81,7 @@ export default function ResultPanel({ status, amount, target, rate, converted, o
             {rawNum(converted)} <span style={{ fontSize: 20, color: colors.accent }}>{target}</span>
           </div>
           <div style={{ color: colors.textSecondary, fontSize: 13, marginTop: 10 }}>
-            1 USD = {fmt(rate, target)}
+            1 {base} = {fmt(rate, target)}
           </div>
         </div>
       )}

@@ -17,39 +17,52 @@
   .chip.active{border-color:#C9A227;color:#C9A227;background:rgba(201,162,39,.12);}
   .status{margin-top:32px;font-size:13px;color:#5C6885;}
   .status b{color:#EDEFF3;}
+  .swap{width:28px;height:28px;border-radius:50%;background:#C9A227;color:#0B1220;display:flex;align-items:center;justify-content:center;font-weight:700;margin:8px auto;}
+  .sparkline{height:36px;margin-top:8px;}
 </style>
 </head>
 <body>
   <div class="eyebrow">EXCHANGE BOARD — VISUAL COMPANION</div>
-  <h1>ExchangeBoard v1.1.0</h1>
+  <h1>ExchangeBoard v1.2.0</h1>
   <div class="muted">Single evergreen reference — reflects current build + roadmap. Amend in place.</div>
 
   <div class="grid">
     <div class="panel">
       <div class="label">YOU HAVE</div>
-      <div class="big">$ <span>1.00</span> <span class="accent" style="font-size:14px;">USD</span></div>
+      <div class="big">1.00 <span class="accent" style="font-size:14px;">USD ▾</span></div>
     </div>
+    <div class="swap">⇅</div>
     <div class="panel">
       <div class="label">CONVERT TO</div>
       <div style="margin-top:8px;">Euro <span class="accent">(EUR)</span></div>
       <div style="margin-top:10px;">
-        <span class="chip active">EUR</span><span class="chip">GBP</span><span class="chip">JPY</span>
+        <span class="chip active">★ EUR</span><span class="chip">GBP</span><span class="chip">JPY</span>
         <span class="chip">CAD</span><span class="chip">AUD</span><span class="chip">INR</span>
         <span class="chip">CNY</span><span class="chip">MXN</span>
       </div>
     </div>
     <div class="panel" style="text-align:center;background:linear-gradient(135deg,#16233D,#101A2E);">
       <div class="label">1 USD EQUALS</div>
-      <div class="big">0.912 <span class="accent" style="font-size:18px;">EUR</span></div>
-      <div class="muted" style="margin-top:8px;">1 USD = €0.9120</div>
+      <div class="big">0.865939 <span class="accent" style="font-size:18px;">EUR</span></div>
+      <div class="muted" style="margin-top:8px;">1 USD = €0.865939</div>
+    </div>
+    <div class="panel">
+      <div class="label">30-DAY TREND — USD/EUR</div>
+      <svg class="sparkline" viewBox="0 0 560 36" preserveAspectRatio="none">
+        <polyline points="8,20 60,18 112,22 164,15 216,17 268,10 320,14 372,8 424,12 476,6 528,9" fill="none" stroke="#C9A227" stroke-width="2"/>
+      </svg>
+    </div>
+    <div class="panel">
+      <div class="label">BASKET</div>
+      <div class="muted" style="margin-top:8px;">JPY ¥157.9261 &nbsp;·&nbsp; GBP £0.7422 &nbsp;·&nbsp; + Add currency</div>
     </div>
   </div>
 
   <div class="status">
-    <b>Build status:</b> Live conversion ✅ · Searchable dropdown ✅ · Ticker strip ✅ ·
-    Quick picks ✅ · Refresh/error states ✅ · Real Vite/React project + GitHub sync ✅<br>
-    <b>Roadmap (not yet built):</b> multi-currency baskets · historical rate charts ·
-    offline/cached rates · favorites persistence · reverse (non-USD) base · automated tests
+    <b>Build status:</b> Any-base reverse conversion ✅ · Favorites ✅ ·
+    History sparkline ✅ · Offline/cached fallback ✅ · Multi-currency basket ✅ ·
+    Automated tests ✅ · Real Vite/React project + GitHub sync ✅ · Android (Capacitor) build ✅<br>
+    <b>Roadmap (not yet built):</b> installable/PWA offline mode · rate alerts · CSV export
   </div>
 </body>
 </html>

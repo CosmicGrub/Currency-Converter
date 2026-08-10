@@ -1,18 +1,48 @@
 import { useEffect, useState } from "react";
 import { colors, fonts } from "./styles/tokens.js";
 import { QUICK_PICKS } from "./data/currencyNames.js";
-import { fetchRates } from "./lib/api.js";
+import { fetchRates, getCachedRates } from "./lib/api.js";
+import { convertAmount, rateBetween } from "./lib/convert.js";
+import { loadJSON, saveJSON } from "./lib/storage.js";
 import Ticker from "./components/Ticker.jsx";
 import AmountPanel from "./components/AmountPanel.jsx";
 import CurrencySelect from "./components/CurrencySelect.jsx";
 import ResultPanel from "./components/ResultPanel.jsx";
+import HistoryChart from "./components/HistoryChart.jsx";
+import Basket from "./components/Basket.jsx";
+
+const defaultPrefs = { base: "USD", target: "EUR", favorites: [], basket: [] };
 
 export default function App() {
   const [rates, setRates] = useState(null);
   const [asOf, setAsOf] = useState(null);
+  const [stale, setStale] = useState(false); // true when showing a cached fallback table
   const [status, setStatus] = useState("loading"); // loading | ready | error
+
+  const [prefs, setPrefs] = useState(() => loadJSON("prefs", defaultPrefs));
+  const { base, target, favorites, basket } = prefs;
   const [amount, setAmount] = useState("1");
-  const [target, setTarget] = useState("EUR");
+
+  useEffect(() => {
+    saveJSON("prefs", prefs);
+  }, [prefs]);
+
+  const setBase = (code) => setPrefs((p) => ({ ...p, base: code }));
+  const setTarget = (code) => setPrefs((p) => ({ ...p, target: code }));
+  const swap = () => setPrefs((p) => ({ ...p, base: p.target, target: p.base }));
+
+  const toggleFavorite = (code) =>
+    setPrefs((p) => ({
+      ...p,
+      favorites: p.favorites.includes(code)
+        ? p.favorites.filter((c) => c !== code)
+        : [...p.favorites, code],
+    }));
+
+  const addToBasket = (code) =>
+    setPrefs((p) => (p.basket.includes(code) ? p : { ...p, basket: [...p.basket, code] }));
+  const removeFromBasket = (code) =>
+    setPrefs((p) => ({ ...p, basket: p.basket.filter((c) => c !== code) }));
 
   const loadRates = () => {
     setStatus("loading");
@@ -20,9 +50,20 @@ export default function App() {
       .then(({ rates, asOf }) => {
         setRates(rates);
         setAsOf(asOf);
+        setStale(false);
         setStatus("ready");
       })
-      .catch(() => setStatus("error"));
+      .catch(() => {
+        const cached = getCachedRates();
+        if (cached) {
+          setRates(cached.rates);
+          setAsOf(cached.asOf);
+          setStale(true);
+          setStatus("ready");
+        } else {
+          setStatus("error");
+        }
+      });
   };
 
   useEffect(() => {
@@ -30,10 +71,10 @@ export default function App() {
   }, []);
 
   const numericAmount = parseFloat(amount);
-  const rate = rates && rates[target] ? rates[target] : null;
-  const converted = rate && !isNaN(numericAmount) ? numericAmount * rate : null;
+  const rate = rates ? rateBetween(rates, base, target) : null;
+  const converted = rates ? convertAmount(numericAmount, rates, base, target) : null;
 
-  const tickerCurrencies = QUICK_PICKS.filter((c) => rates && rates[c]);
+  const tickerCurrencies = QUICK_PICKS.filter((c) => c !== base && rates && rates[c]);
 
   return (
     <div
@@ -46,7 +87,7 @@ export default function App() {
         flexDirection: "column",
       }}
     >
-      <Ticker tickerCurrencies={tickerCurrencies} rates={rates} />
+      <Ticker tickerCurrencies={tickerCurrencies} rates={rates} base={base} />
 
       <style>{`
         @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
@@ -79,11 +120,20 @@ export default function App() {
             Global Currency Converter
           </h1>
           <p style={{ color: colors.textSecondary, fontSize: 14, marginTop: 6 }}>
-            Base currency: United States Dollar (USD)
+            Convert between any two of ~160 currencies, live.
           </p>
         </div>
 
-        <AmountPanel amount={amount} onChange={setAmount} />
+        <AmountPanel
+          amount={amount}
+          onAmountChange={setAmount}
+          base={base}
+          onBaseChange={setBase}
+          rates={rates}
+          excludeCode={target}
+          favorites={favorites}
+          onToggleFavorite={toggleFavorite}
+        />
 
         <div
           style={{
@@ -94,7 +144,10 @@ export default function App() {
             zIndex: 1,
           }}
         >
-          <div
+          <button
+            onClick={swap}
+            aria-label="Swap base and target currencies"
+            title="Swap"
             style={{
               width: 32,
               height: 32,
@@ -107,22 +160,47 @@ export default function App() {
               fontWeight: 700,
               fontSize: 15,
               boxShadow: `0 0 0 6px ${colors.bg}`,
+              border: "none",
+              cursor: "pointer",
             }}
           >
-            ↓
-          </div>
+            ⇅
+          </button>
         </div>
 
-        <CurrencySelect rates={rates} target={target} onChange={setTarget} />
+        <CurrencySelect
+          rates={rates}
+          target={target}
+          onChange={setTarget}
+          excludeCode={base}
+          favorites={favorites}
+          onToggleFavorite={toggleFavorite}
+        />
 
         <ResultPanel
           status={status}
           amount={amount}
+          base={base}
           target={target}
           rate={rate}
           converted={converted}
+          stale={stale}
+          asOf={asOf}
           onRetry={loadRates}
         />
+
+        {status === "ready" && <HistoryChart base={base} target={target} />}
+
+        {status === "ready" && (
+          <Basket
+            rates={rates}
+            base={base}
+            amount={amount}
+            codes={basket}
+            onAdd={addToBasket}
+            onRemove={removeFromBasket}
+          />
+        )}
 
         <div
           style={{
@@ -134,7 +212,9 @@ export default function App() {
             color: colors.textTertiary,
           }}
         >
-          <span>{status === "ready" && asOf ? `Rates as of ${asOf}` : " "}</span>
+          <span>
+            {status === "ready" && asOf ? `${stale ? "Cached rates (offline) as of" : "Rates as of"} ${asOf}` : " "}
+          </span>
           <button
             onClick={loadRates}
             style={{

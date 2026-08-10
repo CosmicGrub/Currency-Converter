@@ -5,27 +5,35 @@ target currency from a searchable dropdown (full name + ISO code, e.g. "Euro
 (EUR)"), and watch the converted amount update instantly — no "=" button,
 calculator-style live result.
 
-![status](https://img.shields.io/badge/status-v1.1.0-C9A227)
+![status](https://img.shields.io/badge/status-v1.2.0-C9A227)
 
 ## Features
 
-- Live USD → any-currency conversion, instant on input or currency change
-- Full name + ISO code shown for every currency (~160 currencies)
-- Searchable dropdown combobox, quick-pick chips for major currencies
-- Scrolling exchange-board rate ticker
-- "1 USD = X CODE" rate line, last-updated timestamp, manual refresh
-- Loading and error/retry states
+- Live conversion between **any two** of ~160 currencies (not just from
+  USD), instant on input, currency, or base change — swap sides with ⇅
+- Full name + ISO code shown for every currency, searchable dropdown on
+  both sides, favorites (★) that float to the top and lead the quick-pick chips
+- 30-day historical rate sparkline for the current pair
+- Offline/cached rate fallback — keeps working (with a visible badge) if the
+  live API is unreachable, using the last successful fetch
+- Multi-currency basket — convert the same amount into several currencies at once
+- Everything (base, target, amount, favorites, basket) persists across reloads
+- Scrolling exchange-board rate ticker, "1 X = Y" rate line, last-updated
+  timestamp, manual refresh, loading/error states
 
 ## Tech stack
 
 - React 18 (function components, hooks only)
-- [Vite](https://vitejs.dev/) for dev server + build
+- [Vite](https://vitejs.dev/) for dev server + build, [Vitest](https://vitest.dev/) + React Testing Library for tests
 - No CSS framework — hand-styled with a dark "exchange board" palette (see
   [`src/styles/tokens.js`](src/styles/tokens.js))
-- Data source: [`open.er-api.com`](https://open.er-api.com/v6/latest/USD) —
-  free, no API key required, CORS-enabled, ~160 currencies, updated ~daily.
-  Fetched once on load; every conversion after that is computed client-side
-  (`amount * rates[code]`) with no per-keystroke network calls.
+- Data sources (both free, no API key, CORS-enabled):
+  - [`open.er-api.com`](https://open.er-api.com/v6/latest/USD) — live rates, ~160 currencies, updated ~daily
+  - [`frankfurter.dev`](https://api.frankfurter.dev) — 30-day history for the sparkline, ~30 currencies
+- All conversion math runs client-side off one USD-indexed rate table
+  (`amount * (rates[target] / rates[base])`) — no extra network calls per
+  keystroke or per base/target change
+- `localStorage` for favorites, last-used base/target/basket, and the offline rate cache
 
 ## Getting started
 
@@ -39,6 +47,8 @@ Then open the printed local URL. No API key or `.env` file needed.
 ```bash
 npm run build    # production build to dist/
 npm run preview  # preview the production build locally
+npm test         # run the test suite once
+npm run test:watch  # watch mode
 ```
 
 ## Project structure
@@ -46,16 +56,25 @@ npm run preview  # preview the production build locally
 ```
 src/
   data/currencyNames.js   # ISO 4217 code -> full name map, quick-pick list
-  lib/api.js               # fetchRates() — talks to open.er-api.com
-  lib/format.js             # fmt(), rawNum() display formatters
+  lib/
+    api.js                  # fetchRates() + getCachedRates() — open.er-api.com + offline cache
+    convert.js               # rateBetween()/convertAmount() — base-agnostic conversion math
+    history.js                # fetchHistory() — frankfurter.dev 30-day series
+    format.js                  # fmt(), rawNum() display formatters
+    storage.js                  # namespaced localStorage helpers
   styles/tokens.js          # design tokens (palette, fonts)
   components/
-    Ticker.jsx               # scrolling rate ticker strip
-    AmountPanel.jsx           # "YOU HAVE" USD input
-    CurrencySelect.jsx        # "CONVERT TO" searchable combobox + chips
-    ResultPanel.jsx           # live converted result / loading / error states
-  App.jsx                    # composes the above, owns state
+    Ticker.jsx               # scrolling rate ticker strip (base-aware)
+    AmountPanel.jsx            # "YOU HAVE" amount + from-currency picker
+    CurrencySelect.jsx          # "CONVERT TO" panel — picker + favorites-aware chips
+    CurrencyPicker.jsx            # shared searchable combobox w/ favorites (used by both panels)
+    ResultPanel.jsx               # live converted result / loading / error / offline states
+    HistoryChart.jsx                # 30-day sparkline
+    Basket.jsx                       # multi-currency basket panel
+  App.jsx                    # composes the above, owns state + persistence
   main.jsx                   # React entry point
+  App.test.jsx              # component smoke tests
+  test/setup.js               # Vitest + RTL setup
 ```
 
 ## Docs
@@ -70,9 +89,17 @@ Google Drive folder.
 
 ## Roadmap
 
-Not yet built: multi-currency baskets, historical rate charts, offline/cached
-rates, favorites persistence, reverse (non-USD base) conversion, automated
-tests.
+The original backlog (multi-currency baskets, historical rate charts,
+offline/cached rates, favorites persistence, reverse conversion, automated
+tests) is now built as of v1.2.0. Open ideas: PWA/installable offline mode,
+push-based rate alerts, CSV export of the basket.
+
+## Android app
+
+Wrapped with [Capacitor](https://capacitorjs.com/) — see the
+`android-*` branches for the generated native project and built APKs used
+for device sideloading (not merged into `main`; the web app is the
+canonical source, the Android project is generated from it via `npx cap sync`).
 
 ## License
 

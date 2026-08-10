@@ -1,7 +1,18 @@
 import { colors, fonts } from "../styles/tokens.js";
+import CurrencyPicker from "./CurrencyPicker.jsx";
 
-/** "YOU HAVE" panel — USD amount input. */
-export default function AmountPanel({ amount, onChange }) {
+/** "YOU HAVE" panel — amount input + the "from" currency (any currency, not
+ *  just USD, now that conversion is base-agnostic). */
+export default function AmountPanel({
+  amount,
+  onAmountChange,
+  base,
+  onBaseChange,
+  rates,
+  excludeCode,
+  favorites,
+  onToggleFavorite,
+}) {
   return (
     <div
       style={{
@@ -23,14 +34,11 @@ export default function AmountPanel({ amount, onChange }) {
         YOU HAVE
       </label>
       <div style={{ display: "flex", alignItems: "center", marginTop: 10, gap: 10 }}>
-        <span style={{ fontFamily: fonts.mono, fontSize: 26, color: colors.textSecondary }}>
-          $
-        </span>
         <input
           type="number"
           inputMode="decimal"
           value={amount}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => onAmountChange(e.target.value)}
           placeholder="0.00"
           style={{
             flex: 1,
@@ -44,19 +52,15 @@ export default function AmountPanel({ amount, onChange }) {
             minWidth: 0,
           }}
         />
-        <span
-          style={{
-            fontSize: 13,
-            fontWeight: 700,
-            color: colors.textPrimary,
-            background: colors.border,
-            borderRadius: 999,
-            padding: "4px 10px",
-            letterSpacing: "0.05em",
-          }}
-        >
-          USD
-        </span>
+        <CurrencyPicker
+          compact
+          rates={rates}
+          value={base}
+          onChange={onBaseChange}
+          excludeCode={excludeCode}
+          favorites={favorites}
+          onToggleFavorite={onToggleFavorite}
+        />
       </div>
     </div>
   );
