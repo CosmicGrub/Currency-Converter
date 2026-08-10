@@ -96,10 +96,11 @@ push-based rate alerts, CSV export of the basket.
 
 ## Android app
 
-Wrapped with [Capacitor](https://capacitorjs.com/) — see the
-`android-*` branches for the generated native project and built APKs used
-for device sideloading (not merged into `main`; the web app is the
-canonical source, the Android project is generated from it via `npx cap sync`).
+Wrapped with [Capacitor](https://capacitorjs.com/) — the `android/` folder
+is a generated native project (`npx cap add android` + `npx cap sync`), not
+hand-maintained; the web app in `src/` remains the canonical source. A
+built debug APK for sideloading lives in
+[`releases/`](releases/ExchangeBoard-v1.2.0-debug.apk).
 
 ## License
 
