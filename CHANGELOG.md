@@ -1,5 +1,42 @@
 # ExchangeBoard — Changelog
 
+## Unreleased — Android widget + Wear OS companion (scaffolded 2026-08-10)
+
+Two staples of a "properly realized" currency app that the web-wrapped
+Capacitor build alone doesn't give you: a glanceable home-screen widget and
+a native wearable presence. Both are genuinely native (not WebView) and do
+their own independent lightweight fetch from `open.er-api.com`, since a
+widget/watch process can't reach into the phone WebView's `localStorage`.
+Built, installed, and confirmed rendering live rates on a real Galaxy Z
+Fold 5 + Galaxy Watch (SM-R965U); not yet version-bumped or shipped
+pending your sign-off on the UX.
+
+- **Home-screen widget** (`android/app/.../RateWidgetProvider.java`) —
+  `AppWidgetProvider` showing USD/EUR, USD/GBP, USD/JPY. Renders instantly
+  from a `SharedPreferences` cache, refreshes in the background (30 min
+  minimum, Android's floor for widget updates), tap opens the app.
+- **Wear OS module** (`android/wear/`) — new standalone Gradle module,
+  `com.cosmicgrub.exchangeboard.wear`, Kotlin:
+  - **Tile** (`RateTileService`) — the wearable-native equivalent of the
+    widget, same three rates, tap opens the companion activity.
+  - **Companion activity** (`MainActivity`) — minimal native (not WebView)
+    full-screen rate display, round-face-safe centered layout.
+  - Independent APK, not bundled via Play-style `wearApp` phone
+    dependency — installed directly to the watch via `adb`.
+- Both widget and tile placement (home screen / tile carousel) are a
+  manual on-device step by platform design — no app or automation tool
+  can add them on the user's behalf.
+- Considered but **not** built, to keep this scoped — flagged for later:
+  - **Rate alert notifications** — already on the roadmap; needs a
+    background job + threshold config, a materially bigger lift than the
+    two above.
+  - **App shortcuts** (long-press launcher icon → jump to a favorite
+    pair) — cheap, but needs the WebView app to handle deep-link intent
+    extras, which it doesn't yet.
+  - **Quick Settings tile** (phone) — more a general-utility-app
+    convention than a currency-app staple; skipped to stay focused on
+    what's actually standard for this category.
+
 ## v1.2.0 — 2026-08-09
 
 Backlog cleared: reverse conversion, favorites, history, offline cache, baskets, tests.

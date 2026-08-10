@@ -96,11 +96,22 @@ push-based rate alerts, CSV export of the basket.
 
 ## Android app
 
-Wrapped with [Capacitor](https://capacitorjs.com/) — the `android/` folder
-is a generated native project (`npx cap add android` + `npx cap sync`), not
-hand-maintained; the web app in `src/` remains the canonical source. A
-built debug APK for sideloading lives in
+Wrapped with [Capacitor](https://capacitorjs.com/) — the `android/app`
+folder is a generated native project (`npx cap add android` + `npx cap
+sync`), not hand-maintained; the web app in `src/` remains the canonical
+source. A built debug APK for sideloading lives in
 [`releases/`](releases/ExchangeBoard-v1.2.0-debug.apk).
+
+Two hand-written (not Capacitor-generated) native additions, both doing
+their own independent rate fetch rather than reading the WebView's cache:
+
+- **Home-screen widget** — `android/app/.../RateWidgetProvider.java`.
+  Build with `:app:assembleDebug`, install/place like any widget.
+- **Wear OS companion** — `android/wear/`, a standalone module (own
+  `applicationId`: `com.cosmicgrub.exchangeboard.wear`). Build with
+  `:wear:assembleDebug`, install to a paired watch with `adb -s <watch
+  serial> install`. Ships a Tile (glanceable rates, add via the watch's
+  tile carousel) and a minimal native companion activity.
 
 ## License
 

@@ -4,4 +4,6 @@
     <string name="title_activity_main">ExchangeBoard</string>
     <string name="package_name">com.cosmicgrub.exchangeboard</string>
     <string name="custom_url_scheme">com.cosmicgrub.exchangeboard</string>
+    <string name="widget_title">EXCHANGE BOARD</string>
+    <string name="widget_description">Glanceable USD/EUR, USD/GBP, USD/JPY rates. Tap to open the app.</string>
 </resources>

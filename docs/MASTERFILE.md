@@ -110,7 +110,13 @@ ratesCache: { rates: Record<string, number>; asOf: string } // last successful f
 - ✅ Automated tests (Vitest + RTL, 21 tests: conversion math, formatters,
   storage edge cases, App smoke tests for happy path + no-cache error path)
 - ✅ Real Vite + React project with git/GitHub, split into focused modules
-- ⬜ Not yet built: installable/PWA offline mode, rate alerts, CSV export
+- ✅ Android app (Capacitor), merged to `main`, sideload-tested
+- ✅ Android home-screen widget — native `AppWidgetProvider`, own rate
+  fetch, in `android/app/`; see CHANGELOG "Unreleased" for detail
+- ✅ Wear OS companion — native Tile + activity, standalone `android/wear`
+  module; see CHANGELOG "Unreleased" for detail
+- ⬜ Not yet built: installable/PWA offline mode, rate alert notifications,
+  CSV export, app shortcuts, Quick Settings tile
 
 ## Standing rules for this project
 - Canonical docs: this masterfile + CHANGELOG.md + docs/VISUAL.html —
