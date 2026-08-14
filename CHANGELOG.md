@@ -37,6 +37,61 @@ pending your sign-off on the UX.
     convention than a currency-app staple; skipped to stay focused on
     what's actually standard for this category.
 
+## v1.3.0 — 2026-08-14
+
+Full-stack hardening pass across four phases: TypeScript, offline
+architecture, UI/utility features, and ecosystem tooling. Zero breaking
+changes — every `exchangeboard:*` localStorage key and the core
+`rates[target] / rates[base]` conversion formula are unchanged.
+
+- **Phase 1 — TypeScript migration & typed state**
+  - Every file in `src/` converted from `.js`/`.jsx` to `.ts`/`.tsx`
+    under a strict `tsconfig.json`; `npm run build` now runs `tsc
+    --noEmit` before `vite build`, and `npm run typecheck` runs it
+    standalone.
+  - New `src/types/index.ts`: `RateTable`, `AppPrefs`, `RatesCache`,
+    `HistoricalData`, `HistoryPoint`, `Status`, `Timeframe`.
+  - `convert.ts`'s `rateBetween()`/`convertAmount()` validate numeric
+    finiteness explicitly instead of relying on truthy/`isNaN` checks.
+  - `App.tsx`'s ad-hoc `setPrefs()` callbacks replaced by a typed
+    `useReducer` (`src/reducers/prefsReducer.ts`) isolating five
+    actions: `SET_BASE`, `SET_TARGET`, `SWAP_PAIR`, `TOGGLE_FAVORITE`,
+    `UPDATE_BASKET`.
+- **Phase 2 — Offline & IndexedDB data layer**
+  - New `src/lib/db.ts`: a three-tier fallback chain (IndexedDB
+    `"history_cache"` store, via `idb-keyval` → `localStorage` → an
+    in-memory `Map`), backing the historical rate series so the trend
+    chart can render from cache when offline.
+  - PWA via `vite-plugin-pwa`: a generated Workbox service worker with
+    Stale-While-Revalidate caching for `open.er-api.com` and
+    `api.frankfurter.dev`, precaching all built JS/CSS/HTML/font
+    assets, plus an installable manifest (`public/icon.svg`).
+  - New `OfflineBanner` (driven by a `useOnlineStatus()` hook) shows a
+    top-of-page indicator whenever the browser reports no connection
+    at all, distinct from the existing per-result "cached rates" badge.
+- **Phase 3 — UI, charting & utility enhancements**
+  - `HistoryChart.tsx` gained a 7D/30D/90D/1Y timeframe switcher, each
+    window cached independently.
+  - `AmountPanel.tsx` gained a Fee & Markup calculator (0% / +0.5% /
+    +1.5% / +3%) — `applyMarkup()` folds the selected markup into the
+    rate/amount shown in the result panel and every basket row, with
+    an "incl. X% fee" label; the raw live rate is still the default.
+  - New `src/components/Matrix.tsx` — an N x N comparative exchange
+    matrix over the favorites list.
+  - `format.ts`'s `fmt()`/`rawNum()` now format using the browser's
+    `navigator.language` (`getLocale()`, overridable per call) instead
+    of a hardcoded `en-US`.
+- **Phase 4 — Automation, CI/CD & CLI utility**
+  - New `bin/exchangeboard.js` — a dependency-free terminal CLI
+    (`npx exchangeboard convert 100 USD EUR`, `rates USD`, `--json`,
+    `--refresh`), fetching `open.er-api.com` directly with a 1-hour
+    local file cache at `~/.exchangeboard/rates-cache.json`.
+  - New `.github/workflows/ci.yml` — typecheck + full Vitest suite on
+    every push/PR, plus a production `vite build` gated by a strict
+    bundle-size budget (`scripts/check-bundle-size.mjs`).
+- Test suite grew from 21 to 33 Vitest tests (db.ts fallback chain,
+  `applyMarkup`, locale overrides, the new Matrix component).
+
 ## v1.2.0 — 2026-08-09
 
 Backlog cleared: reverse conversion, favorites, history, offline cache, baskets, tests.
