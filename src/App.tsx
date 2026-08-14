@@ -1,25 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { colors, fonts } from "./styles/tokens.js";
 import { QUICK_PICKS } from "./data/currencyNames.js";
 import { fetchRates, getCachedRates } from "./lib/api.js";
 import { convertAmount, rateBetween } from "./lib/convert.js";
 import { loadJSON, saveJSON } from "./lib/storage.js";
-import Ticker from "./components/Ticker.jsx";
-import AmountPanel from "./components/AmountPanel.jsx";
-import CurrencySelect from "./components/CurrencySelect.jsx";
-import ResultPanel from "./components/ResultPanel.jsx";
-import HistoryChart from "./components/HistoryChart.jsx";
-import Basket from "./components/Basket.jsx";
-
-const defaultPrefs = { base: "USD", target: "EUR", favorites: [], basket: [] };
+import { defaultPrefs, prefsReducer } from "./reducers/prefsReducer.js";
+import Ticker from "./components/Ticker.js";
+import AmountPanel from "./components/AmountPanel.js";
+import CurrencySelect from "./components/CurrencySelect.js";
+import ResultPanel from "./components/ResultPanel.js";
+import HistoryChart from "./components/HistoryChart.js";
+import Basket from "./components/Basket.js";
+import type { RateTable, Status } from "./types/index.js";
 
 export default function App() {
-  const [rates, setRates] = useState(null);
-  const [asOf, setAsOf] = useState(null);
+  const [rates, setRates] = useState<RateTable | null>(null);
+  const [asOf, setAsOf] = useState<string | null>(null);
   const [stale, setStale] = useState(false); // true when showing a cached fallback table
-  const [status, setStatus] = useState("loading"); // loading | ready | error
+  const [status, setStatus] = useState<Status>("loading");
 
-  const [prefs, setPrefs] = useState(() => loadJSON("prefs", defaultPrefs));
+  const [prefs, dispatch] = useReducer(prefsReducer, undefined, () =>
+    loadJSON("prefs", defaultPrefs)
+  );
   const { base, target, favorites, basket } = prefs;
   const [amount, setAmount] = useState("1");
 
@@ -27,22 +29,16 @@ export default function App() {
     saveJSON("prefs", prefs);
   }, [prefs]);
 
-  const setBase = (code) => setPrefs((p) => ({ ...p, base: code }));
-  const setTarget = (code) => setPrefs((p) => ({ ...p, target: code }));
-  const swap = () => setPrefs((p) => ({ ...p, base: p.target, target: p.base }));
+  const setBase = (code: string) => dispatch({ type: "SET_BASE", code });
+  const setTarget = (code: string) => dispatch({ type: "SET_TARGET", code });
+  const swap = () => dispatch({ type: "SWAP_PAIR" });
+  const toggleFavorite = (code: string) => dispatch({ type: "TOGGLE_FAVORITE", code });
 
-  const toggleFavorite = (code) =>
-    setPrefs((p) => ({
-      ...p,
-      favorites: p.favorites.includes(code)
-        ? p.favorites.filter((c) => c !== code)
-        : [...p.favorites, code],
-    }));
-
-  const addToBasket = (code) =>
-    setPrefs((p) => (p.basket.includes(code) ? p : { ...p, basket: [...p.basket, code] }));
-  const removeFromBasket = (code) =>
-    setPrefs((p) => ({ ...p, basket: p.basket.filter((c) => c !== code) }));
+  const addToBasket = (code: string) => {
+    if (!basket.includes(code)) dispatch({ type: "UPDATE_BASKET", basket: [...basket, code] });
+  };
+  const removeFromBasket = (code: string) =>
+    dispatch({ type: "UPDATE_BASKET", basket: basket.filter((c) => c !== code) });
 
   const loadRates = () => {
     setStatus("loading");

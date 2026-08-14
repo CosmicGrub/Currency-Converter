@@ -1,5 +1,17 @@
 import { colors, fonts } from "../styles/tokens.js";
-import CurrencyPicker from "./CurrencyPicker.jsx";
+import CurrencyPicker from "./CurrencyPicker.js";
+import type { RateTable } from "../types/index.js";
+
+export interface AmountPanelProps {
+  amount: string;
+  onAmountChange: (amount: string) => void;
+  base: string;
+  onBaseChange: (code: string) => void;
+  rates: RateTable | null;
+  excludeCode: string;
+  favorites: string[];
+  onToggleFavorite: (code: string) => void;
+}
 
 /** "YOU HAVE" panel — amount input + the "from" currency (any currency, not
  *  just USD, now that conversion is base-agnostic). */
@@ -12,7 +24,7 @@ export default function AmountPanel({
   excludeCode,
   favorites,
   onToggleFavorite,
-}) {
+}: AmountPanelProps) {
   return (
     <div
       style={{

@@ -4,7 +4,7 @@
 
 /** Formats a number as a currency string for the given ISO code, falling
  *  back to a plain number + code suffix if Intl doesn't recognize it. */
-export const fmt = (n, code) => {
+export const fmt = (n: number, code: string): string => {
   try {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -17,5 +17,5 @@ export const fmt = (n, code) => {
 };
 
 /** Formats a raw (unit-less) number for the big result readout. */
-export const rawNum = (n) =>
+export const rawNum = (n: number): string =>
   n.toLocaleString("en-US", { maximumFractionDigits: 6 });

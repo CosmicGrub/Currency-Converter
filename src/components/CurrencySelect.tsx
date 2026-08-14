@@ -1,6 +1,16 @@
 import { colors } from "../styles/tokens.js";
 import { QUICK_PICKS } from "../data/currencyNames.js";
-import CurrencyPicker from "./CurrencyPicker.jsx";
+import CurrencyPicker from "./CurrencyPicker.js";
+import type { RateTable } from "../types/index.js";
+
+export interface CurrencySelectProps {
+  rates: RateTable | null;
+  target: string;
+  onChange: (code: string) => void;
+  excludeCode: string;
+  favorites: string[];
+  onToggleFavorite: (code: string) => void;
+}
 
 /** "CONVERT TO" panel — searchable combobox + favorites-aware quick-pick chips. */
 export default function CurrencySelect({
@@ -10,7 +20,7 @@ export default function CurrencySelect({
   excludeCode,
   favorites,
   onToggleFavorite,
-}) {
+}: CurrencySelectProps) {
   // Favorites lead the chip row (deduped), quick picks fill the rest.
   const chips = [...new Set([...(favorites || []), ...QUICK_PICKS])]
     .filter((c) => c !== excludeCode)

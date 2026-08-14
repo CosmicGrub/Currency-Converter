@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // ISO 4217 currency names — full name + code, used to populate the selector.
 // ---------------------------------------------------------------------------
-export const CURRENCY_NAMES = {
+export const CURRENCY_NAMES: Record<string, string> = {
   USD: "United States Dollar", EUR: "Euro", GBP: "British Pound Sterling",
   JPY: "Japanese Yen", CHF: "Swiss Franc", CAD: "Canadian Dollar",
   AUD: "Australian Dollar", NZD: "New Zealand Dollar", CNY: "Chinese Yuan",

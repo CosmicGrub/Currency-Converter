@@ -1,9 +1,31 @@
 import { colors, fonts } from "../styles/tokens.js";
 import { fmt, rawNum } from "../lib/format.js";
+import type { Status } from "../types/index.js";
+
+export interface ResultPanelProps {
+  status: Status;
+  amount: string;
+  base: string;
+  target: string;
+  rate: number | null;
+  converted: number | null;
+  stale: boolean;
+  asOf: string | null;
+  onRetry: () => void;
+}
 
 /** Live "X EQUALS" result panel — handles loading/error/ready states, and a
  *  "stale/offline" badge when showing a cached rate table instead of a fresh fetch. */
-export default function ResultPanel({ status, amount, base, target, rate, converted, stale, onRetry }) {
+export default function ResultPanel({
+  status,
+  amount,
+  base,
+  target,
+  rate,
+  converted,
+  stale,
+  onRetry,
+}: ResultPanelProps) {
   return (
     <div
       style={{
@@ -40,7 +62,7 @@ export default function ResultPanel({ status, amount, base, target, rate, conver
           </button>
         </div>
       )}
-      {status === "ready" && converted !== null && (
+      {status === "ready" && converted !== null && rate !== null && (
         <div key={base + target + amount} style={{ animation: "flipIn 0.18s ease-out" }}>
           {stale && (
             <div

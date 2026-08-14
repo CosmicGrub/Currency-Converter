@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { colors, fonts } from "../styles/tokens.js";
 import { fetchHistory } from "../lib/history.js";
+import type { HistoryPoint } from "../types/index.js";
 
 const WIDTH = 560;
 const HEIGHT = 100;
 const PAD = 8;
 
-function buildPath(points) {
+function buildPath(points: HistoryPoint[]): string {
   if (points.length < 2) return "";
   const values = points.map((p) => p.rate);
   const min = Math.min(...values);
@@ -23,11 +24,16 @@ function buildPath(points) {
     .join(" ");
 }
 
+export interface HistoryChartProps {
+  base: string;
+  target: string;
+}
+
 /** 30-day sparkline of the base -> target rate. Silently renders nothing if
  *  the pair isn't covered by the historical data source — that's an
  *  expected outcome for exotic currencies, not an error. */
-export default function HistoryChart({ base, target }) {
-  const [points, setPoints] = useState(null); // null = loading, [] = unavailable
+export default function HistoryChart({ base, target }: HistoryChartProps) {
+  const [points, setPoints] = useState<HistoryPoint[] | null>(null); // null = loading, [] = unavailable
 
   useEffect(() => {
     if (base === target) {

@@ -3,10 +3,20 @@ import { colors, fonts } from "../styles/tokens.js";
 import { CURRENCY_NAMES } from "../data/currencyNames.js";
 import { convertAmount } from "../lib/convert.js";
 import { fmt } from "../lib/format.js";
+import type { RateTable } from "../types/index.js";
+
+export interface BasketProps {
+  rates: RateTable | null;
+  base: string;
+  amount: string;
+  codes: string[];
+  onAdd: (code: string) => void;
+  onRemove: (code: string) => void;
+}
 
 /** Multi-currency basket — convert the same amount into several currencies
  *  at once, e.g. to compare payout options or plan a multi-country trip. */
-export default function Basket({ rates, base, amount, codes, onAdd, onRemove }) {
+export default function Basket({ rates, base, amount, codes, onAdd, onRemove }: BasketProps) {
   const [adding, setAdding] = useState(false);
   const [search, setSearch] = useState("");
 
