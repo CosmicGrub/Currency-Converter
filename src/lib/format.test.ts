@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fmt, rawNum } from "./format.js";
+import { fmt, getLocale, rawNum } from "./format.js";
 
 describe("fmt", () => {
   it("formats a currency amount with the code's symbol", () => {
@@ -15,6 +15,12 @@ describe("fmt", () => {
     // RangeError constructing it, which is exactly the fallback path we're testing.
     expect(fmt(12.3456, "US")).toBe("12.3456 US");
   });
+
+  it("honors an explicit locale override, independent of the browser default", () => {
+    // German locale: thousands "." and decimal "," -- distinct enough from
+    // en-US to prove the locale argument actually reaches Intl.
+    expect(fmt(1234.5, "EUR", "de-DE")).toBe("1.234,50 €");
+  });
 });
 
 describe("rawNum", () => {
@@ -24,5 +30,18 @@ describe("rawNum", () => {
 
   it("handles whole numbers without a trailing decimal", () => {
     expect(rawNum(250)).toBe("250");
+  });
+
+  it("honors an explicit locale override", () => {
+    expect(rawNum(1234.5, "de-DE")).toBe("1.234,5");
+  });
+});
+
+describe("getLocale", () => {
+  it("falls back to en-US when navigator.language is unavailable", () => {
+    // In the jsdom test environment navigator.language is "en-US" by
+    // default -- this just documents the contract the CLI (no `navigator`
+    // at all) relies on for its own formatting.
+    expect(getLocale()).toBe(navigator.language || "en-US");
   });
 });

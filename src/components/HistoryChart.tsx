@@ -1,11 +1,21 @@
 import { useEffect, useState } from "react";
 import { colors, fonts } from "../styles/tokens.js";
 import { fetchHistory } from "../lib/history.js";
-import type { HistoryPoint } from "../types/index.js";
+import type { HistoryPoint, Timeframe } from "../types/index.js";
 
 const WIDTH = 560;
 const HEIGHT = 100;
 const PAD = 8;
+
+/** Timeframe -> days-back, passed straight through to the frankfurter.dev
+ *  `{start}..{end}` date-range endpoint params (see lib/history.ts). */
+const TIMEFRAME_DAYS: Record<Timeframe, number> = {
+  "7D": 7,
+  "30D": 30,
+  "90D": 90,
+  "1Y": 365,
+};
+const TIMEFRAMES: Timeframe[] = ["7D", "30D", "90D", "1Y"];
 
 function buildPath(points: HistoryPoint[]): string {
   if (points.length < 2) return "";
@@ -29,10 +39,12 @@ export interface HistoryChartProps {
   target: string;
 }
 
-/** 30-day sparkline of the base -> target rate. Silently renders nothing if
- *  the pair isn't covered by the historical data source — that's an
- *  expected outcome for exotic currencies, not an error. */
+/** Sparkline trend chart for the base -> target rate, with a selectable
+ *  7D/30D/90D/1Y timeframe. Silently renders nothing but a note if the pair
+ *  isn't covered by the historical data source — that's an expected
+ *  outcome for exotic currencies, not an error. */
 export default function HistoryChart({ base, target }: HistoryChartProps) {
+  const [timeframe, setTimeframe] = useState<Timeframe>("30D");
   const [points, setPoints] = useState<HistoryPoint[] | null>(null); // null = loading, [] = unavailable
 
   useEffect(() => {
@@ -43,7 +55,7 @@ export default function HistoryChart({ base, target }: HistoryChartProps) {
     setPoints(null);
     let cancelled = false;
     const controller = new AbortController();
-    fetchHistory(base, target, { signal: controller.signal })
+    fetchHistory(base, target, { days: TIMEFRAME_DAYS[timeframe], signal: controller.signal })
       .then((result) => {
         if (!cancelled) setPoints(result);
       })
@@ -54,19 +66,64 @@ export default function HistoryChart({ base, target }: HistoryChartProps) {
       cancelled = true;
       controller.abort();
     };
-  }, [base, target]);
+  }, [base, target, timeframe]);
+
+  const timeframeSwitcher = (
+    <div style={{ display: "flex", gap: 4 }}>
+      {TIMEFRAMES.map((tf) => (
+        <button
+          key={tf}
+          onClick={() => setTimeframe(tf)}
+          style={{
+            padding: "3px 8px",
+            borderRadius: 6,
+            border: "1px solid " + (timeframe === tf ? colors.accent : colors.borderAlt),
+            background: timeframe === tf ? "rgba(201,162,39,0.12)" : "transparent",
+            color: timeframe === tf ? colors.accent : colors.textSecondary,
+            fontSize: 11,
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          {tf}
+        </button>
+      ))}
+    </div>
+  );
 
   if (points === null) {
     return (
-      <div style={{ color: colors.textTertiary, fontSize: 12, marginTop: 16 }}>
-        Loading 30-day trend…
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          color: colors.textTertiary,
+          fontSize: 12,
+          marginTop: 16,
+        }}
+      >
+        <span>Loading {timeframe} trend…</span>
+        {timeframeSwitcher}
       </div>
     );
   }
   if (points.length < 2) {
     return (
-      <div style={{ color: colors.textTertiary, fontSize: 12, marginTop: 16 }}>
-        30-day trend unavailable for {base}/{target}.
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          color: colors.textTertiary,
+          fontSize: 12,
+          marginTop: 16,
+        }}
+      >
+        <span>
+          {timeframe} trend unavailable for {base}/{target}.
+        </span>
+        {timeframeSwitcher}
       </div>
     );
   }
@@ -90,7 +147,7 @@ export default function HistoryChart({ base, target }: HistoryChartProps) {
         <label
           style={{ fontSize: 11, letterSpacing: "0.1em", color: colors.textSecondary, fontWeight: 600 }}
         >
-          30-DAY TREND — {base}/{target}
+          {timeframe} TREND — {base}/{target}
         </label>
         <span style={{ fontFamily: fonts.mono, fontSize: 12, color: trendColor, fontWeight: 700 }}>
           {change >= 0 ? "▲" : "▼"} {Math.abs(change).toFixed(2)}%
@@ -107,12 +164,14 @@ export default function HistoryChart({ base, target }: HistoryChartProps) {
         style={{
           display: "flex",
           justifyContent: "space-between",
+          alignItems: "center",
           color: colors.textTertiary,
           fontSize: 11,
           marginTop: 4,
         }}
       >
         <span>{points[0].date}</span>
+        {timeframeSwitcher}
         <span>{points[points.length - 1].date}</span>
       </div>
     </div>

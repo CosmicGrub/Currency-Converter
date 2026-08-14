@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { convertAmount, rateBetween } from "./convert.js";
+import { applyMarkup, convertAmount, rateBetween } from "./convert.js";
 
 // A representative slice of a real open.er-api.com USD-indexed rates table.
 const ratesUSD = { USD: 1, EUR: 0.865939, GBP: 0.7422, JPY: 157.9261 };
@@ -43,5 +43,20 @@ describe("convertAmount", () => {
 
   it("returns null when the rate can't be resolved", () => {
     expect(convertAmount(10, ratesUSD, "USD", "ZZZ")).toBeNull();
+  });
+});
+
+describe("applyMarkup", () => {
+  it("returns the rate unchanged at 0% markup", () => {
+    expect(applyMarkup(0.865939, 0)).toBe(0.865939);
+  });
+
+  it("reduces the rate by the markup percentage", () => {
+    expect(applyMarkup(100, 0.015)).toBeCloseTo(98.5, 10);
+    expect(applyMarkup(100, 0.03)).toBeCloseTo(97, 10);
+  });
+
+  it("propagates a null rate", () => {
+    expect(applyMarkup(null, 0.015)).toBeNull();
   });
 });

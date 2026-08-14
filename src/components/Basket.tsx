@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { colors, fonts } from "../styles/tokens.js";
 import { CURRENCY_NAMES } from "../data/currencyNames.js";
-import { convertAmount } from "../lib/convert.js";
+import { applyMarkup, convertAmount } from "../lib/convert.js";
 import { fmt } from "../lib/format.js";
 import type { RateTable } from "../types/index.js";
 
@@ -12,11 +12,22 @@ export interface BasketProps {
   codes: string[];
   onAdd: (code: string) => void;
   onRemove: (code: string) => void;
+  /** Fee/markup percentage applied to every basket conversion, matching the
+   *  AmountPanel fee calculator setting -- 0 means the raw live rate. */
+  markupPct?: number;
 }
 
 /** Multi-currency basket — convert the same amount into several currencies
  *  at once, e.g. to compare payout options or plan a multi-country trip. */
-export default function Basket({ rates, base, amount, codes, onAdd, onRemove }: BasketProps) {
+export default function Basket({
+  rates,
+  base,
+  amount,
+  codes,
+  onAdd,
+  onRemove,
+  markupPct = 0,
+}: BasketProps) {
   const [adding, setAdding] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -124,7 +135,8 @@ export default function Basket({ rates, base, amount, codes, onAdd, onRemove }: 
       ) : (
         <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
           {codes.map((c) => {
-            const converted = rates ? convertAmount(numericAmount, rates, base, c) : null;
+            const rawConverted = rates ? convertAmount(numericAmount, rates, base, c) : null;
+            const converted = rawConverted !== null ? applyMarkup(rawConverted, markupPct) : null;
             return (
               <div
                 key={c}

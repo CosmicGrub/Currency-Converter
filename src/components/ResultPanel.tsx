@@ -12,6 +12,9 @@ export interface ResultPanelProps {
   stale: boolean;
   asOf: string | null;
   onRetry: () => void;
+  /** Fee/markup percentage already folded into `rate`/`converted` (see
+   *  lib/convert.ts applyMarkup) -- 0 means the figures are the raw live rate. */
+  markupPct?: number;
 }
 
 /** Live "X EQUALS" result panel — handles loading/error/ready states, and a
@@ -25,6 +28,7 @@ export default function ResultPanel({
   converted,
   stale,
   onRetry,
+  markupPct = 0,
 }: ResultPanelProps) {
   return (
     <div
@@ -104,6 +108,9 @@ export default function ResultPanel({
           </div>
           <div style={{ color: colors.textSecondary, fontSize: 13, marginTop: 10 }}>
             1 {base} = {fmt(rate, target)}
+            {markupPct > 0 && (
+              <span style={{ color: colors.textTertiary }}> (incl. {(markupPct * 100).toFixed(1)}% fee)</span>
+            )}
           </div>
         </div>
       )}

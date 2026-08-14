@@ -34,3 +34,11 @@ export function convertAmount(
   if (rate === null || typeof amount !== "number" || !isFinite(amount)) return null;
   return amount * rate;
 }
+
+/** Applies a fee/markup percentage (e.g. 0.015 for +1.5%) to a live rate,
+ *  the way a money-transfer or card provider marks up the mid-market rate.
+ *  `markupPct` of 0 returns the rate unchanged; null propagates. */
+export function applyMarkup(rate: number | null, markupPct: number): number | null {
+  if (rate === null || typeof markupPct !== "number" || !isFinite(markupPct)) return rate;
+  return rate * (1 - markupPct);
+}
