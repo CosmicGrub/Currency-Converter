@@ -4,6 +4,9 @@
   "version": "1.2.0",
   "type": "module",
   "description": "ExchangeBoard — a USD-based global currency converter with live, instant conversion.",
+  "bin": {
+    "exchangeboard": "./bin/exchangeboard.js"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
@@ -11,7 +14,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "size-check": "node scripts/check-bundle-size.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
