@@ -5,15 +5,18 @@ import { fetchRates, getCachedRates } from "./lib/api.js";
 import { convertAmount, rateBetween } from "./lib/convert.js";
 import { loadJSON, saveJSON } from "./lib/storage.js";
 import { defaultPrefs, prefsReducer } from "./reducers/prefsReducer.js";
+import { useOnlineStatus } from "./hooks/useOnlineStatus.js";
 import Ticker from "./components/Ticker.js";
 import AmountPanel from "./components/AmountPanel.js";
 import CurrencySelect from "./components/CurrencySelect.js";
 import ResultPanel from "./components/ResultPanel.js";
 import HistoryChart from "./components/HistoryChart.js";
 import Basket from "./components/Basket.js";
+import OfflineBanner from "./components/OfflineBanner.js";
 import type { RateTable, Status } from "./types/index.js";
 
 export default function App() {
+  const online = useOnlineStatus();
   const [rates, setRates] = useState<RateTable | null>(null);
   const [asOf, setAsOf] = useState<string | null>(null);
   const [stale, setStale] = useState(false); // true when showing a cached fallback table
@@ -83,6 +86,7 @@ export default function App() {
         flexDirection: "column",
       }}
     >
+      <OfflineBanner offline={!online} />
       <Ticker tickerCurrencies={tickerCurrencies} rates={rates} base={base} />
 
       <style>{`

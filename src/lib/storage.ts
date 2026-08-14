@@ -23,3 +23,11 @@ export function saveJSON<T>(name: string, value: T): void {
     // storage unavailable/full -- silently no-op, app still works in-memory
   }
 }
+
+export function removeJSON(name: string): void {
+  try {
+    localStorage.removeItem(key(name));
+  } catch {
+    // storage unavailable -- silently no-op
+  }
+}
