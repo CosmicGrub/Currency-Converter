@@ -1,6 +1,5 @@
 package com.cosmicgrub.exchangeboard.wear
 
-import android.app.Activity
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
@@ -11,6 +10,7 @@ import android.view.MotionEvent
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import androidx.fragment.app.FragmentActivity
 import androidx.wear.ambient.AmbientModeSupport
 import java.util.concurrent.Executors
 
@@ -32,7 +32,13 @@ import java.util.concurrent.Executors
  *    per Wear OS's ambient update budget -- never a network fetch while
  *    ambient, per platform power guidelines.
  */
-class MainActivity : Activity(), AmbientModeSupport.AmbientCallbackProvider {
+// FragmentActivity, not plain Activity: AmbientModeSupport.attach() requires
+// one (it hooks the activity lifecycle via a headless Fragment internally).
+// FragmentActivity extends Activity through the same androidx.activity
+// lineage, so every plain-Activity API this class already uses (onCreate,
+// setContentView, findViewById, window, resources, ...) still works
+// unchanged -- this is a strict widening, not a rewrite.
+class MainActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvider {
 
     private val executor = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())

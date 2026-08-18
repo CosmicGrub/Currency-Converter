@@ -77,14 +77,28 @@ policy — confirmed via a 403 at the proxy, not a real outage). That means:
   dependency was already present. `watchface-complications-data-source-
   ktx:1.2.1` checked out fine against the real Maven index and needed no
   change.
+- **`MainActivity` extended the wrong base class.** It was written as
+  `class MainActivity : Activity(), AmbientModeSupport.AmbientCallbackProvider`
+  — but `AmbientModeSupport.attach()` requires a
+  `androidx.fragment.app.FragmentActivity` (it manages a headless
+  `Fragment` internally to hook the activity lifecycle), not a plain
+  `android.app.Activity`. CI's Kotlin compile step caught it as a type
+  mismatch. Fixed by extending `FragmentActivity` instead —
+  `FragmentActivity` sits in the same `Activity` → ... → `ComponentActivity`
+  → `FragmentActivity` lineage, so every plain-`Activity` API this class
+  already used (`onCreate`, `setContentView`, `findViewById`, `window`,
+  `resources`) kept working unchanged; no manifest change needed either,
+  since the `Theme.DeviceDefault` theme has no AppCompat requirement
+  (that constraint is specific to `AppCompatActivity`, not
+  `FragmentActivity`).
 - **CI now compiles this on every push.** The `android` job in
   `.github/workflows/ci.yml` runs `./gradlew :wear:assembleDebug` on a
   GitHub-hosted runner (real Android SDK, full internet access) — that's
-  the typo/API-drift/dependency-resolution check this used to be missing,
-  and its first two runs already caught real mistakes (this one, plus a
-  wrong import package in the Fold5 hinge plugin — see
-  `docs/DEVICE_FOLD5.md`). Check the job's status on the commit you care
-  about.
+  the typo/API-drift/dependency-resolution/type-check this used to be
+  missing, and its first runs already caught real mistakes across this
+  file and `activity_main.xml` (plus a wrong import package in the
+  Fold5 hinge plugin — see `docs/DEVICE_FOLD5.md`). Check the job's
+  status on the commit you care about.
 - **Runtime behavior still needs a real device or emulator** — CI proves
   the code builds, not that the rotary input feels right in hand, that
   ambient mode's redraw timing looks correct, or that the complication
