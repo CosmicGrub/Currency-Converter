@@ -162,9 +162,20 @@ stale cache on network failure.
 - Type: JetBrains Mono for numerals/rates, Inter/system sans for labels
 - Signature element: exchange-board ticker tape + instant "flip" result reveal
 
-## Status (v1.4.0 — 2026-08-19)
+## Status (v1.5.0 — 2026-08-18)
 - ✅ Any-currency-to-any-currency conversion, instant, with swap —
   169-code ISO 4217 fiat catalog + 10 curated blue-chip cryptocurrencies
+- ✅ Device-tuned responsive layout: Galaxy Z Fold 5 (cover-screen +
+  unfolded two-column + real hinge-hardware-driven flex mode, via a
+  custom Capacitor plugin over Jetpack WindowManager's `FoldingFeature`),
+  Galaxy Tab (extra-wide breakpoint), everything in between — see
+  `docs/DEVICE_FOLD5.md` / `docs/DEVICE_TABLET.md`
+- ✅ On-device "AI" — linear-regression trend insight (`src/lib/forecast.ts`)
+  and an adaptive "Currency IQ" learning quiz (`src/lib/currencyQuiz.ts`),
+  both fully client-side, zero cost, no external API
+- ✅ Threshold-based rate alerts (in-app status + optional browser
+  notification, foreground/open-app scope) and named basket presets —
+  see `docs/FEATURE_ALERTS_AND_PRESETS.md`
 - ✅ Favorites (starred, persisted, lead the quick-pick chips) + N x N
   favorites comparison matrix
 - ✅ 7D/30D/90D/1Y historical rate trend chart, per-timeframe offline cache
@@ -184,14 +195,18 @@ stale cache on network failure.
   free/no-key, optional/non-blocking, own 1-day offline cache
 - ✅ Terminal CLI (`bin/exchangeboard.js`, `npx exchangeboard convert/rates`)
 - ✅ GitHub Actions CI: typecheck, tests, build, bundle-size budget gate
-- ✅ Automated tests (Vitest + RTL, 48 tests: conversion math incl.
+- ✅ Automated tests (Vitest + RTL, 112 tests: conversion math incl.
   markup, formatters incl. locale overrides, storage/db fallback chain
   edge cases, crypto rate fetch/cache/fallback, currency-name data
-  quality, Matrix component, App smoke tests)
+  quality, fold-state/forecast/quiz/alerts pure logic, Matrix/Insights/
+  CurrencyQuiz/Alerts components, App smoke tests)
 - ✅ Real Vite + React project with git/GitHub, split into focused modules
 - ✅ Android app (Capacitor), merged to `main`, sideload-tested
 - ✅ Android home-screen widget — native `AppWidgetProvider`, own rate
   fetch, in `android/app/`; see CHANGELOG "Unreleased" for detail
+- ✅ Wear OS companion enhanced: physical rotary bezel input, ambient/
+  always-on-display mode, watch-face complication (Watch6 Classic) — see
+  `docs/DEVICE_WATCH6_CLASSIC.md`
 - ✅ Wear OS companion — native Tile + activity, standalone `android/wear`
   module; see CHANGELOG "Unreleased" for detail
 - ⬜ Not yet built: rate alert notifications, CSV export, app shortcuts,

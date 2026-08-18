@@ -1,5 +1,51 @@
 # ExchangeBoard — Changelog
 
+## v1.5.0 — 2026-08-18
+
+Three device-specific branches and a feature branch, combined into one
+unified default build.
+
+- **Galaxy Z Fold 5** (`docs/DEVICE_FOLD5.md`) — responsive cover-screen/
+  unfolded two-column layout; real hinge-state hardware integration via
+  a custom Capacitor plugin (`FoldStatePlugin.java`, Jetpack
+  WindowManager's `FoldingFeature`) driving a genuine flex-mode
+  (tabletop-posture) layout sized by the actual reported hinge position
+  — something no CSS media query can express, since that posture reports
+  the same viewport size as fully-unfolded-flat; and two cost-free,
+  fully on-device "AI" features: `src/lib/forecast.ts` (linear-regression
+  trend insight over existing history data) and `src/lib/currencyQuiz.ts`
+  ("Currency IQ", an adaptive miss-rate-weighted learning quiz).
+- **Galaxy Tab** (`docs/DEVICE_TABLET.md`) — the same responsive
+  two-column approach, plus an extra-wide breakpoint (1024px+) with more
+  breathing room and a type-size bump for large tablets in landscape.
+- **Galaxy Watch6 Classic** (`docs/DEVICE_WATCH6_CLASSIC.md`) — native
+  Wear OS work in `android/wear/`: physical rotary bezel input, an
+  always-on-display ambient mode, and a watch-face complication, on top
+  of the existing Tile + companion activity.
+- **Rate alerts & named basket presets** (`docs/FEATURE_ALERTS_AND_PRESETS.md`)
+  — threshold-based rate alerts (foreground/open-app scope, honestly
+  documented as such — this project has no backend) with live in-app
+  status and an optional browser notification; save/load/delete named
+  snapshots of the basket.
+
+Combining these into one `main` needed real hand-merging, not just a git
+merge button: Fold5 and Tab each independently created `src/styles/
+responsive.css` and rewrote `src/App.tsx`; Alerts+Presets also rewrote
+`App.tsx`. The result: one shared `responsive.css` covering every screen
+class (cover-screen narrow, wide two-column, extra-wide tablet, and
+Fold5's flex-mode), and one `App.tsx` with every feature wired together.
+`android/app/build.gradle`'s `versionName` no longer carries a
+per-device suffix, since this is now the one default build for every
+device — the Fold5-only native hinge plugin degrades to a safe no-op
+everywhere else.
+
+112/112 tests passing, `tsc --noEmit` clean, production build + bundle-
+size check pass (~64KB gzip, well under the 300KB CI budget). The native
+pieces (the Fold5 hinge plugin, the Watch6 Classic Wear OS additions)
+are still unverified by a real compile — see the respective docs for
+the full verification-status notes; both were authored without Android
+SDK/Maven access.
+
 ## v1.4.0 — 2026-08-19
 
 Curated cryptocurrency support, converting alongside fiat.

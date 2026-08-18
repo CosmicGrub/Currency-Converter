@@ -5,7 +5,7 @@ target currency from a searchable dropdown (full name + ISO code, e.g. "Euro
 (EUR)"), and watch the converted amount update instantly — no "=" button,
 calculator-style live result.
 
-![status](https://img.shields.io/badge/status-v1.4.0-C9A227)
+![status](https://img.shields.io/badge/status-v1.5.0-C9A227)
 
 ## Features
 
@@ -19,10 +19,21 @@ calculator-style live result.
   trending/"here today gone tomorrow" tokens
 - Full name + ISO code shown for every currency, searchable dropdown on
   both sides, favorites (★) that float to the top and lead the quick-pick chips
-- 7D/30D/90D/1Y historical rate trend chart for the current pair
+- 7D/30D/90D/1Y historical rate trend chart for the current pair, plus an
+  on-device linear-regression trend insight (`docs/DEVICE_FOLD5.md`) —
+  fully client-side, zero cost, not a financial forecast
+- "Currency IQ" — an adaptive, miss-rate-weighted name-the-currency quiz
 - Fee & Markup calculator (0% / +0.5% / +1.5% / +3%) — see what you'd
   actually receive after a typical transfer/card fee
+- Threshold-based rate alerts, in-app status + optional browser
+  notification (foreground/open-app scope — see
+  `docs/FEATURE_ALERTS_AND_PRESETS.md`)
 - N x N comparative exchange matrix over your favorites
+- Named basket presets — save/load/delete whole basket snapshots
+- Responsive layout tuned per device: Galaxy Z Fold 5 (cover-screen +
+  unfolded two-column + real hinge-hardware-driven flex mode on an
+  actual foldable), Galaxy Tab (extra-wide breakpoint for large
+  tablets), and everything in between
 - Installable PWA — works fully offline after the first visit (precached
   app shell + Stale-While-Revalidate rate/history caching via a Workbox
   service worker), with an IndexedDB-backed historical data cache
@@ -30,10 +41,13 @@ calculator-style live result.
 - Offline/cached rate fallback — keeps working (with a visible badge) if the
   live API is unreachable, using the last successful fetch
 - Multi-currency basket — convert the same amount into several currencies at once
-- Everything (base, target, amount, favorites, basket) persists across reloads
+- Everything (base, target, amount, favorites, basket, presets, alerts)
+  persists across reloads
 - Scrolling exchange-board rate ticker, "1 X = Y" rate line, last-updated
   timestamp, manual refresh, loading/error states
 - Terminal CLI (`npx exchangeboard convert 100 USD EUR`) for scripting/CI use
+- Android home-screen widget, Wear OS companion (Tile + rotary bezel
+  input + ambient mode + watch-face complication on Watch6 Classic)
 
 ## Tech stack
 
@@ -132,6 +146,11 @@ Google Drive folder.
 - [`docs/MASTERFILE.md`](docs/MASTERFILE.md) — architecture, file structure, data model, design tokens
 - [`CHANGELOG.md`](CHANGELOG.md) — version history
 - [`docs/VISUAL.html`](docs/VISUAL.html) — static visual reference/companion
+- [`docs/DEVICE_FOLD5.md`](docs/DEVICE_FOLD5.md) — Fold5 layout, real hinge-hardware flex mode, on-device AI (trend insight + Currency IQ quiz)
+- [`docs/DEVICE_TABLET.md`](docs/DEVICE_TABLET.md) — Galaxy Tab layout tuning
+- [`docs/DEVICE_WATCH6_CLASSIC.md`](docs/DEVICE_WATCH6_CLASSIC.md) — Wear OS rotary input, ambient mode, complication
+- [`docs/FEATURE_ALERTS_AND_PRESETS.md`](docs/FEATURE_ALERTS_AND_PRESETS.md) — rate alerts + named basket presets
+- [`docs/BUILD_STEPS.md`](docs/BUILD_STEPS.md) — per-device build/install steps (Fold5, Tab, Watch6 Classic)
 
 ## Roadmap
 
@@ -140,8 +159,11 @@ offline/cached rates, favorites persistence, reverse conversion, automated
 tests) shipped in v1.2.0; TypeScript, PWA/offline architecture, the fee
 calculator, favorites matrix, and CLI/CI tooling shipped in v1.3.0; full
 ISO 4217 currency-name coverage and curated blue-chip crypto shipped in
-v1.3.1/v1.4.0. Open ideas: push-based rate alerts, CSV export of the
-basket, app shortcuts.
+v1.3.1/v1.4.0; device-tuned layouts (Fold5 hinge-hardware flex mode +
+on-device AI, Galaxy Tab, Watch6 Classic rotary/ambient/complication) and
+rate alerts + basket presets shipped in v1.5.0. Open ideas: CSV export of
+the basket, app shortcuts, true background rate alerts via a native
+WorkManager job (see `docs/FEATURE_ALERTS_AND_PRESETS.md`).
 
 ## Android app
 
