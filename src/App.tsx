@@ -103,16 +103,15 @@ export default function App() {
         select::-ms-expand { display: none; }
       `}</style>
 
-      <div
-        style={{
-          flex: 1,
-          maxWidth: 640,
-          width: "100%",
-          margin: "0 auto",
-          padding: "28px 20px 48px",
-        }}
-      >
-        <div style={{ marginBottom: 28 }}>
+      {/* .eb-container: base (mobile/cover-screen) layout lives inline further
+          up in this file's history -- now owned by src/styles/responsive.css
+          so the stylesheet's media queries can flip display:flex -> grid on
+          an unfolded/wide viewport without needing `!important` anywhere.
+          `flex: 1` stays inline since it's about sizing within *this* div's
+          own parent (the page-level flex column above), not about this
+          div's own children -- orthogonal to what the stylesheet controls. */}
+      <div className="eb-container" style={{ flex: 1 }}>
+        <div className="eb-header" style={{ marginBottom: 28 }}>
           <div
             style={{
               fontSize: 11,
@@ -133,20 +132,23 @@ export default function App() {
           </p>
         </div>
 
-        <AmountPanel
-          amount={amount}
-          onAmountChange={setAmount}
-          base={base}
-          onBaseChange={setBase}
-          rates={rates}
-          excludeCode={target}
-          favorites={favorites}
-          onToggleFavorite={toggleFavorite}
-          markupPct={markupPct}
-          onMarkupChange={setMarkupPct}
-        />
+        <div className="eb-amount">
+          <AmountPanel
+            amount={amount}
+            onAmountChange={setAmount}
+            base={base}
+            onBaseChange={setBase}
+            rates={rates}
+            excludeCode={target}
+            favorites={favorites}
+            onToggleFavorite={toggleFavorite}
+            markupPct={markupPct}
+            onMarkupChange={setMarkupPct}
+          />
+        </div>
 
         <div
+          className="eb-swap"
           style={{
             display: "flex",
             justifyContent: "center",
@@ -179,45 +181,65 @@ export default function App() {
           </button>
         </div>
 
-        <CurrencySelect
-          rates={rates}
-          target={target}
-          onChange={setTarget}
-          excludeCode={base}
-          favorites={favorites}
-          onToggleFavorite={toggleFavorite}
-        />
+        <div className="eb-convert">
+          <CurrencySelect
+            rates={rates}
+            target={target}
+            onChange={setTarget}
+            excludeCode={base}
+            favorites={favorites}
+            onToggleFavorite={toggleFavorite}
+          />
+        </div>
 
-        <ResultPanel
-          status={status}
-          amount={amount}
-          base={base}
-          target={target}
-          rate={rate}
-          converted={converted}
-          stale={stale}
-          asOf={asOf}
-          onRetry={loadRates}
-          markupPct={markupPct}
-        />
-
-        {status === "ready" && <HistoryChart base={base} target={target} />}
+        <div className="eb-result">
+          <ResultPanel
+            status={status}
+            amount={amount}
+            base={base}
+            target={target}
+            rate={rate}
+            converted={converted}
+            stale={stale}
+            asOf={asOf}
+            onRetry={loadRates}
+            markupPct={markupPct}
+          />
+        </div>
 
         {status === "ready" && (
-          <Basket
-            rates={rates}
-            base={base}
-            amount={amount}
-            markupPct={markupPct}
-            codes={basket}
-            onAdd={addToBasket}
-            onRemove={removeFromBasket}
-          />
+          <div className="eb-history">
+            <HistoryChart base={base} target={target} />
+          </div>
         )}
 
-        {status === "ready" && <Matrix rates={rates} favorites={favorites} />}
+        {/* Basket before Matrix in source order, matching the original
+            stacking order -- matters only in the narrow/cover-screen
+            layout, which has no grid-area and just stacks by DOM order.
+            The wide grid layout (responsive.css) places both explicitly
+            by grid-area regardless of this order. */}
+        {status === "ready" && (
+          <div className="eb-basket">
+            <Basket
+              rates={rates}
+              base={base}
+              amount={amount}
+              markupPct={markupPct}
+              codes={basket}
+              onAdd={addToBasket}
+              onRemove={removeFromBasket}
+            />
+          </div>
+        )}
+
+        {status === "ready" && (
+          <div className="eb-matrix">
+            <Matrix rates={rates} favorites={favorites} />
+          </div>
+        )}
 
         <div
+          className="eb-footer"
           style={{
             display: "flex",
             justifyContent: "space-between",

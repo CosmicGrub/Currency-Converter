@@ -1,0 +1,86 @@
+/* ---------------------------------------------------------------------------
+ * Device-specific responsive layout tuning -- Galaxy Z Fold 5 build.
+ *
+ * Pure CSS, no JS layout logic: the WebView's native media-query engine
+ * re-flows this instantly on an actual fold/unfold (or any resize), with
+ * zero React re-render cost and no flash of incorrectly-laid-out content.
+ *
+ * Two real screen states to design for:
+ *   - Cover screen (folded):  ~344 x 882 CSS px  -- tall, narrow, phone-like.
+ *     The existing single-column stack already suits this; we just tighten
+ *     padding a touch so nothing feels cramped on the narrower width.
+ *   - Main screen (unfolded): ~884 x 736 CSS px  -- wide, roughly square.
+ *     Stacking everything in one column wastes the width, so above 680px
+ *     we switch to a two-column grid (paired panels side by side).
+ *
+ * .eb-* class names are applied in src/App.tsx alongside (not replacing)
+ * the existing inline styles -- see the comment there for which inline
+ * properties were deliberately left off the container so this stylesheet
+ * can control them without needing `!important` anywhere.
+ * ------------------------------------------------------------------------- */
+
+.eb-container {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 28px 20px 48px;
+}
+
+/* Unfolded main screen (and anything similarly wide): two-column grid. */
+@media (min-width: 680px) {
+  .eb-container {
+    display: grid;
+    max-width: 960px;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "header  header"
+      "amount  convert"
+      "swap    swap"
+      "result  result"
+      "history matrix"
+      "basket  basket"
+      "footer  footer";
+    gap: 4px 20px;
+    align-items: start;
+  }
+
+  .eb-header {
+    grid-area: header;
+  }
+  .eb-amount {
+    grid-area: amount;
+  }
+  .eb-convert {
+    grid-area: convert;
+  }
+  .eb-swap {
+    grid-area: swap;
+    justify-self: center;
+  }
+  .eb-result {
+    grid-area: result;
+  }
+  .eb-history {
+    grid-area: history;
+  }
+  .eb-matrix {
+    grid-area: matrix;
+  }
+  .eb-basket {
+    grid-area: basket;
+  }
+  .eb-footer {
+    grid-area: footer;
+  }
+}
+
+/* Cover-screen-class narrow viewports: a little less padding so the tall,
+ * narrow display doesn't feel squeezed. */
+@media (max-width: 380px) {
+  .eb-container {
+    padding: 20px 14px 40px;
+  }
+}
