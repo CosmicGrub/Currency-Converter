@@ -5,6 +5,7 @@ import { fetchRates, getCachedRates } from "./lib/api.js";
 import { fetchCryptoRatesSafe } from "./lib/crypto.js";
 import { applyMarkup, convertAmount, rateBetween } from "./lib/convert.js";
 import { loadJSON, saveJSON } from "./lib/storage.js";
+import { genId } from "./lib/id.js";
 import { defaultPrefs, prefsReducer } from "./reducers/prefsReducer.js";
 import { useOnlineStatus } from "./hooks/useOnlineStatus.js";
 import { useFoldState } from "./hooks/useFoldState.js";
@@ -18,8 +19,9 @@ import Basket from "./components/Basket.js";
 import Matrix from "./components/Matrix.js";
 import Insights from "./components/Insights.js";
 import CurrencyQuiz from "./components/CurrencyQuiz.js";
+import Alerts from "./components/Alerts.js";
 import OfflineBanner from "./components/OfflineBanner.js";
-import type { RateTable, Status } from "./types/index.js";
+import type { RateAlert, RateTable, Status } from "./types/index.js";
 
 /** Wraps `children` in a real div (for the flex-mode top/bottom split)
  *  only when `active` -- otherwise renders a Fragment, so the wrapped
@@ -47,6 +49,12 @@ function FlexGroup({
   );
 }
 
+// How often to silently re-fetch rates while at least one alert is
+// enabled, so a threshold crossing gets noticed without the user having
+// to manually refresh. Only runs at all when there's something to watch
+// for -- no extra API calls for users not using alerts.
+const ALERT_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+
 export default function App() {
   const online = useOnlineStatus();
   const [rates, setRates] = useState<RateTable | null>(null);
@@ -54,10 +62,16 @@ export default function App() {
   const [stale, setStale] = useState(false); // true when showing a cached fallback table
   const [status, setStatus] = useState<Status>("loading");
 
-  const [prefs, dispatch] = useReducer(prefsReducer, undefined, () =>
-    loadJSON("prefs", defaultPrefs)
-  );
-  const { base, target, favorites, basket } = prefs;
+  // Merge stored prefs over defaultPrefs (not the reverse) so older saved
+  // prefs blobs -- from before basketPresets/alerts existed -- get those
+  // fields defaulted instead of `undefined` at runtime, while every field
+  // that *was* already stored (base/target/favorites/basket) is preserved
+  // exactly as-is. Zero migration step needed, just a safe merge on read.
+  const [prefs, dispatch] = useReducer(prefsReducer, undefined, () => ({
+    ...defaultPrefs,
+    ...loadJSON("prefs", defaultPrefs),
+  }));
+  const { base, target, favorites, basket, basketPresets, alerts } = prefs;
   const [amount, setAmount] = useState("1");
   const [markupPct, setMarkupPct] = useState(0); // Fee/markup calculator (Phase 3) -- 0 = live mid-market rate
 
@@ -88,8 +102,22 @@ export default function App() {
   const removeFromBasket = (code: string) =>
     dispatch({ type: "UPDATE_BASKET", basket: basket.filter((c) => c !== code) });
 
-  const loadRates = async () => {
-    setStatus("loading");
+  const savePreset = (name: string) => dispatch({ type: "SAVE_BASKET_PRESET", id: genId(), name });
+  const loadPreset = (id: string) => dispatch({ type: "LOAD_BASKET_PRESET", id });
+  const deletePreset = (id: string) => dispatch({ type: "DELETE_BASKET_PRESET", id });
+
+  const addAlert = (alert: RateAlert) => dispatch({ type: "ADD_ALERT", alert });
+  const removeAlert = (id: string) => dispatch({ type: "REMOVE_ALERT", id });
+  const toggleAlert = (id: string) => dispatch({ type: "TOGGLE_ALERT", id });
+  const markAlertTriggered = (id: string, triggered: boolean) =>
+    dispatch({ type: "MARK_ALERT_TRIGGERED", id, triggered });
+
+  const loadRates = async ({ silent = false }: { silent?: boolean } = {}) => {
+    // `silent`: used by the alert-driven background refresh below -- never
+    // flips the UI to "loading" (no flicker on a poll the user didn't ask
+    // for) and never flips a working UI to "error" on a transient failure
+    // with no cache to fall back to (just leaves the screen as it was).
+    if (!silent) setStatus("loading");
     try {
       const { rates: fiatRates, asOf: liveAsOf } = await fetchRates();
       // Crypto rides along with the fiat table but never blocks it -- a
@@ -108,11 +136,22 @@ export default function App() {
         setAsOf(cached.asOf);
         setStale(true);
         setStatus("ready");
-      } else {
+      } else if (!silent) {
         setStatus("error");
       }
     }
   };
+
+  // Rate alerts are foreground/open-app only (see docs) -- this is what
+  // makes that honest: while at least one alert is enabled, silently
+  // re-fetch periodically so a threshold crossing gets noticed without a
+  // manual refresh. No polling at all when there are no enabled alerts.
+  useEffect(() => {
+    if (!alerts.some((a) => a.enabled)) return;
+    const id = setInterval(() => loadRates({ silent: true }), ALERT_REFRESH_INTERVAL_MS);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [alerts]);
 
   useEffect(() => {
     loadRates();
@@ -279,6 +318,10 @@ export default function App() {
                 codes={basket}
                 onAdd={addToBasket}
                 onRemove={removeFromBasket}
+                presets={basketPresets}
+                onSavePreset={savePreset}
+                onLoadPreset={loadPreset}
+                onDeletePreset={deletePreset}
               />
             </div>
           )}
@@ -301,6 +344,21 @@ export default function App() {
             </div>
           )}
 
+          {status === "ready" && (
+            <div className="eb-alerts">
+              <Alerts
+                rates={rates}
+                base={base}
+                target={target}
+                alerts={alerts}
+                onAdd={addAlert}
+                onRemove={removeAlert}
+                onToggle={toggleAlert}
+                onMarkTriggered={markAlertTriggered}
+              />
+            </div>
+          )}
+
           <div
             className="eb-footer"
             style={{
@@ -316,7 +374,7 @@ export default function App() {
               {status === "ready" && asOf ? `${stale ? "Cached rates (offline) as of" : "Rates as of"} ${asOf}` : " "}
             </span>
             <button
-              onClick={loadRates}
+              onClick={() => loadRates()}
               style={{
                 background: "transparent",
                 border: "none",

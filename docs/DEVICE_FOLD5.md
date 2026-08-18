@@ -1,7 +1,10 @@
 # ExchangeBoard — Galaxy Z Fold 5 build
 
-**Branch:** `device/galaxy-z-fold5` (forked from `main` @ v1.4.0, not merged —
-device-specific variant, not part of the mainline product).
+**Status:** merged into `main` as of v1.5.0 (originally developed on
+`device/galaxy-z-fold5`, combined with the Galaxy Tab and alerts/presets
+branches into one unified default build by request — see `CHANGELOG.md`).
+Everything below still describes exactly what this code does; only the
+"separate variant" framing is out of date.
 
 ## History
 
@@ -138,7 +141,8 @@ already fetches or from the user's own local quiz history.
 
 ## Verification
 
-- `npm run typecheck` / `npm test` (85/85, up from 48 — 37 new tests
+- As last verified on this branch before the combined merge:
+  `npm run typecheck` / `npm test` (85/85, up from 48 — 37 new tests
   covering `forecast.ts`, `currencyQuiz.ts`, `foldState.ts`'s pure logic
   and browser-fallback behavior, `Insights.tsx`, and `CurrencyQuiz.tsx`)
   / `npm run build` + `npm run size-check` all pass. Bundle: ~62KB gzip,

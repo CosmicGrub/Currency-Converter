@@ -8,11 +8,12 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        // Device-specific build (device/galaxy-z-fold5 branch) -- same
-        // applicationId as the default build (install one variant per
-        // device, not side-by-side), versionName suffix is just so
-        // Settings > About shows which layout variant is installed.
-        versionName "1.4.0-fold5"
+        // Unified build -- the Fold5 hinge-hardware/AI features, Galaxy
+        // Tab layout tuning, and the alerts/basket-presets feature branch
+        // were all combined into this one default build (see git history
+        // around the "integration/combine-tab-alerts-into-main" merge),
+        // so there's no longer a per-device versionName suffix here.
+        versionName "1.5.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -41,13 +42,16 @@ dependencies {
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
 
-    // Fold5 branch: real hinge-state detection (FoldingFeature) via
-    // Jetpack WindowManager, bridged to the web layer by FoldStatePlugin
-    // -- window-java provides the callback-based API this plain-Java
-    // plugin uses (the core `window` artifact is Kotlin-Flow-first).
-    // Versions couldn't be checked against the current Google Maven
-    // index from the sandbox this was authored in (dl.google.com wasn't
-    // reachable there) -- verify in Android Studio before building.
+    // Real hinge-state detection (FoldingFeature) via Jetpack
+    // WindowManager, bridged to the web layer by FoldStatePlugin --
+    // window-java provides the callback-based API this plain-Java plugin
+    // uses (the core `window` artifact is Kotlin-Flow-first). Only has an
+    // effect on foldable hardware (e.g. a Fold5); everywhere else the
+    // plugin just reports "no fold" and this dependency is dead weight
+    // at ~nothing (no runtime cost beyond APK size). Versions couldn't be
+    // checked against the current Google Maven index from the sandbox
+    // this was authored in (dl.google.com wasn't reachable there) --
+    // verify in Android Studio before building.
     implementation "androidx.window:window:1.3.0"
     implementation "androidx.window:window-java:1.3.0"
 

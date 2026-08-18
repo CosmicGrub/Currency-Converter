@@ -1,17 +1,28 @@
 /* ---------------------------------------------------------------------------
- * Device-specific responsive layout tuning -- Galaxy Z Fold 5 build.
+ * Unified responsive layout tuning -- serves every device this app ships
+ * on (phone, Fold5 cover/unfolded/flex-mode, tablets) from one shared
+ * stylesheet. Originated as three separate device-specific branches
+ * (Fold5, Galaxy Tab, plus the alerts/presets feature branch's App.tsx
+ * changes) that were combined into main by request -- see git history /
+ * docs/DEVICE_FOLD5.md, docs/DEVICE_TABLET.md for the original per-device
+ * rationale, preserved here since it still applies.
  *
- * Pure CSS, no JS layout logic: the WebView's native media-query engine
- * re-flows this instantly on an actual fold/unfold (or any resize), with
- * zero React re-render cost and no flash of incorrectly-laid-out content.
+ * Pure CSS, no JS layout logic for the breakpoints below: the browser's
+ * native media-query engine re-flows this instantly on any resize/fold/
+ * rotation, with zero React re-render cost. (Flex mode, further down,
+ * is the one exception -- it needs a real hardware signal CSS can't see.)
  *
- * Two real screen states to design for:
- *   - Cover screen (folded):  ~344 x 882 CSS px  -- tall, narrow, phone-like.
- *     The existing single-column stack already suits this; we just tighten
- *     padding a touch so nothing feels cramped on the narrower width.
- *   - Main screen (unfolded): ~884 x 736 CSS px  -- wide, roughly square.
- *     Stacking everything in one column wastes the width, so above 680px
- *     we switch to a two-column grid (paired panels side by side).
+ * Screen classes this covers:
+ *   - Narrow phones / Fold5 cover screen (folded): ~344-380 CSS px wide,
+ *     tall and narrow. The base single-column stack already suits this;
+ *     the <380px rule below just tightens padding a little.
+ *   - Unfolded Fold5 (~884x736) / any tablet (~680px+, both orientations):
+ *     two-column grid instead of a single narrow, centered stack.
+ *   - Large tablets in landscape (Tab S9/S9+/S9 Ultra, 11-14", 1024px+):
+ *     extra breathing room and a ~5% type-size bump for typical tablet
+ *     viewing distance.
+ *   - Split-screen/multi-window multitasking: same defensive <380px rule
+ *     as the cover screen handles this too, regardless of device class.
  *
  * .eb-* class names are applied in src/App.tsx alongside (not replacing)
  * the existing inline styles -- see the comment there for which inline
@@ -29,7 +40,7 @@
   padding: 28px 20px 48px;
 }
 
-/* Unfolded main screen (and anything similarly wide): two-column grid. */
+/* Unfolded Fold5 / any tablet / anything similarly wide: two-column grid. */
 @media (min-width: 680px) {
   .eb-container {
     display: grid;
@@ -43,6 +54,7 @@
       "history  matrix"
       "basket   basket"
       "insights quiz"
+      "alerts   alerts"
       "footer   footer";
     gap: 4px 20px;
     align-items: start;
@@ -79,13 +91,29 @@
   .eb-quiz {
     grid-area: quiz;
   }
+  .eb-alerts {
+    grid-area: alerts;
+  }
   .eb-footer {
     grid-area: footer;
   }
 }
 
-/* Cover-screen-class narrow viewports: a little less padding so the tall,
- * narrow display doesn't feel squeezed. */
+/* Large tablets in landscape (e.g. Tab S9/S9+/S9 Ultra, 11-14"): more
+   breathing room, and nudge type up slightly so it doesn't read small
+   held at typical tablet viewing distance. Fold5's unfolded screen
+   (~884px) stays under this threshold, so it never triggers there. */
+@media (min-width: 1024px) {
+  .eb-container {
+    max-width: 1160px;
+    gap: 6px 32px;
+    font-size: 1.05em;
+  }
+}
+
+/* Cover-screen-class narrow viewports, and split-screen/multi-window
+ * multitasking on any device: a little less padding so a tall, narrow
+ * viewport doesn't feel squeezed. */
 @media (max-width: 380px) {
   .eb-container {
     padding: 20px 14px 40px;
@@ -98,7 +126,9 @@
  * by the *real* hinge state from src/lib/foldState.ts / the native
  * FoldStatePlugin), never by a media query alone: this posture reports
  * the exact same viewport dimensions as fully-unfolded-flat, so only the
- * platform's actual hinge-angle sensor can tell the two apart.
+ * platform's actual hinge-angle sensor can tell the two apart. Fold5-only
+ * in practice -- other devices never report a fold at all, so `flexMode`
+ * is always false for them and this block never applies.
  *
  * Splits into two stacked regions at the *actual* hinge position
  * (--hinge-top-fraction, set inline in App.tsx from the native
@@ -106,9 +136,9 @@
  * region holds the primary "look at it" controls (amount/convert/result),
  * sized to roughly match the screen above the crease; the bottom region
  * holds the secondary "scan/scroll" content (history, matrix, basket,
- * insights, quiz) and scrolls independently, the natural way people
- * actually use tabletop mode -- top half as the display, bottom half as
- * the surface they're looking down into.
+ * insights, quiz, alerts) and scrolls independently, the natural way
+ * people actually use tabletop mode -- top half as the display, bottom
+ * half as the surface they're looking down into.
  * ------------------------------------------------------------------------- */
 .eb-container.flex-mode {
   display: flex;

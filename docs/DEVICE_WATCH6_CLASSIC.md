@@ -1,7 +1,9 @@
 # ExchangeBoard — Galaxy Watch6 Classic build
 
-**Branch:** `device/galaxy-watch6-classic` (forked from `main` @ v1.4.0, not
-merged — device-specific variant, not part of the mainline product).
+**Status:** merged into `main` as of v1.5.0 (originally developed on
+`device/galaxy-watch6-classic`; this one merged cleanly with no conflicts
+since it only touches `android/wear/`, isolated from the phone/tablet web
+layer). Everything below still describes exactly what this code does.
 
 ## What's different from `main`
 
