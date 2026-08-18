@@ -1,0 +1,99 @@
+/* ---------------------------------------------------------------------------
+ * Device-specific responsive layout tuning -- Galaxy Tab build.
+ *
+ * Pure CSS, no JS layout logic: the browser's native media-query engine
+ * re-flows this instantly on any resize/rotation, with zero React
+ * re-render cost and no flash of incorrectly-laid-out content.
+ *
+ * Tablets are (almost) always wide, in both orientations -- a Galaxy Tab
+ * in portrait is already wider than a phone's landscape, and in landscape
+ * it's wider still (up to ~1200-1600 CSS px on an 11-14" tablet). Stacking
+ * everything in one narrow column wastes that width badly, so above 680px
+ * we switch to a two-column grid, then widen further and bump type size a
+ * touch on genuinely large tablets so nothing looks lost in the middle of
+ * the screen.
+ *
+ * .eb-* class names are applied in src/App.tsx alongside (not replacing)
+ * the existing inline styles -- see the comment there for which inline
+ * properties were deliberately left off the container so this stylesheet
+ * can control them without needing `!important` anywhere.
+ * ------------------------------------------------------------------------- */
+
+.eb-container {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 28px 20px 48px;
+}
+
+/* Tablet in either orientation: two-column grid instead of a single
+   narrow, centered stack. */
+@media (min-width: 680px) {
+  .eb-container {
+    display: grid;
+    max-width: 960px;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "header  header"
+      "amount  convert"
+      "swap    swap"
+      "result  result"
+      "history matrix"
+      "basket  basket"
+      "footer  footer";
+    gap: 4px 20px;
+    align-items: start;
+  }
+
+  .eb-header {
+    grid-area: header;
+  }
+  .eb-amount {
+    grid-area: amount;
+  }
+  .eb-convert {
+    grid-area: convert;
+  }
+  .eb-swap {
+    grid-area: swap;
+    justify-self: center;
+  }
+  .eb-result {
+    grid-area: result;
+  }
+  .eb-history {
+    grid-area: history;
+  }
+  .eb-matrix {
+    grid-area: matrix;
+  }
+  .eb-basket {
+    grid-area: basket;
+  }
+  .eb-footer {
+    grid-area: footer;
+  }
+}
+
+/* Large tablets in landscape (e.g. Tab S9/S9+/S9 Ultra, 11-14"): more
+   breathing room, and nudge type up slightly so it doesn't read small
+   held at typical tablet viewing distance. */
+@media (min-width: 1024px) {
+  .eb-container {
+    max-width: 1160px;
+    gap: 6px 32px;
+    font-size: 1.05em;
+  }
+}
+
+/* Defensive fallback for split-screen/multi-window tablet multitasking,
+   which can shrink the app's share of the screen down to phone-narrow
+   widths even though the device itself is a tablet. */
+@media (max-width: 380px) {
+  .eb-container {
+    padding: 20px 14px 40px;
+  }
+}

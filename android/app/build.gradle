@@ -8,7 +8,11 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        // Device-specific build (device/galaxy-tab branch) -- same
+        // applicationId as the default build (install one variant per
+        // device, not side-by-side), versionName suffix is just so
+        // Settings > About shows which layout variant is installed.
+        versionName "1.4.0-tab"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
