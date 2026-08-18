@@ -44,7 +44,11 @@ class RateTileService : TileService() {
     override fun onTileRequest(
         requestParams: RequestBuilders.TileRequest
     ): ListenableFuture<TileBuilders.Tile> {
-        val (cached, updated) = RateFetcher.readCache(this)
+        // The Tile stays glanceable (3 rows) even though RateFetcher now
+        // tracks a longer list for the companion activity's scrollable
+        // view -- a Tile that needs scrolling defeats the point of a Tile.
+        val (allCached, updated) = RateFetcher.readCache(this)
+        val cached = allCached.take(3)
 
         // Kick a refresh in the background; if it succeeds, ask the system
         // to re-request this tile so the carousel picks up fresh numbers.

@@ -3,4 +3,5 @@
     <string name="app_name">ExchangeBoard</string>
     <string name="tile_label">Exchange rates</string>
     <string name="loading">Loading…</string>
+    <string name="complication_label">ExchangeBoard rate</string>
 </resources>
