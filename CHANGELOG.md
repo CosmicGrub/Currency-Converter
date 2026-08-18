@@ -1,5 +1,60 @@
 # ExchangeBoard — Changelog
 
+## v1.4.0 — 2026-08-19
+
+Curated cryptocurrency support, converting alongside fiat.
+
+- New `src/lib/crypto.ts`: a fixed, curated list of 10 blue-chip
+  cryptocurrencies with long, uninterrupted trading histories on major
+  regulated exchanges — `BTC`, `ETH`, `XRP`, `BCH`, `LTC`, `XLM`,
+  `ETC`, `ADA`, `TRX`, `BNB`. Deliberately excludes stablecoins (just a
+  fiat peg, not a distinct asset) and meme-origin/trending coins. This
+  is a product decision, not a technical one — the list lives in one
+  place (`CRYPTO_ASSETS`) if it ever needs to change.
+- Live prices come from CoinGecko's free `/simple/price` endpoint (no
+  API key, CORS-enabled, same pattern as the app's other two data
+  sources) and are inverted (`1 / priceUSD`) into the same USD-indexed
+  `rates` shape fiat already uses, then merged in — so the picker,
+  ticker, basket, and favorites matrix all support crypto with **zero**
+  changes to `rateBetween`/`convertAmount` or any component.
+- Fully optional and non-blocking: a CoinGecko outage never affects
+  fiat conversion. Crypto rates get their own 1-day localStorage cache
+  (`exchangeboard:cryptoRatesCache`) with the same
+  live-then-cached-then-empty fallback chain as the fiat rate cache,
+  and their own Stale-While-Revalidate PWA runtime-cache entry.
+- `format.ts`'s non-ISO fallback path (which every crypto code hits,
+  since `Intl.NumberFormat` only recognizes ISO 4217 currencies) now
+  gets the same extra sub-1 precision fiat already gets in the ISO
+  path, instead of a flat 4 decimals.
+- 10 new tests for `crypto.ts` (rate inversion, live fetch + cache,
+  fallback-to-cache on network failure, safe empty-result path) plus
+  a `CURRENCY_NAMES` regression test confirming the crypto merge.
+  48/48 tests passing, `tsc --noEmit` clean, bundle size ~57KB gzip
+  (unchanged, well under the 300KB CI budget).
+
+## v1.3.1 — 2026-08-19
+
+Full ISO 4217 currency-name coverage pass.
+
+- `src/data/currencyNames.ts` grew from 158 to 169 entries, purely
+  additive (nothing existing changed or was removed). Added the
+  currently-circulating/recently-redenominated codes that were missing:
+  `BYN` (Belarusian Ruble), `SSP` (South Sudanese Pound), `SVC`
+  (Salvadoran Colon), `SLE` (Sierra Leonean Leone, the 2022
+  redenomination — `SLL` stays for compatibility with feeds still
+  using the old code), `XCG` (Caribbean Guilder, replacing `ANG` for
+  Curaçao/Sint Maarten — `ANG` stays for the same reason), `VED`
+  (Venezuelan Bolívar Digital), `ZWG`/`ZWL` (Zimbabwe Gold and the
+  legacy Zimbabwean Dollar), and the IMF/precious-metal codes some
+  rate providers return alongside `XAU`/`XAG`: `XDR`, `XPD`, `XPT`.
+- New `src/data/currencyNames.test.ts`: data-quality regression tests
+  (well-formed codes, no blank names, a 169+ count floor, presence of
+  the newly-added codes, every `QUICK_PICKS` entry has a name).
+- No changes to conversion logic, localStorage keys, or the live rate
+  API integration — this only expands the name lookup used for
+  display, so any currency the live API (or a future data source)
+  returns gets a real name instead of falling back to its bare code.
+
 ## Unreleased — Android widget + Wear OS companion (scaffolded 2026-08-10)
 
 Two staples of a "properly realized" currency app that the web-wrapped
@@ -36,6 +91,61 @@ pending your sign-off on the UX.
   - **Quick Settings tile** (phone) — more a general-utility-app
     convention than a currency-app staple; skipped to stay focused on
     what's actually standard for this category.
+
+## v1.3.0 — 2026-08-14
+
+Full-stack hardening pass across four phases: TypeScript, offline
+architecture, UI/utility features, and ecosystem tooling. Zero breaking
+changes — every `exchangeboard:*` localStorage key and the core
+`rates[target] / rates[base]` conversion formula are unchanged.
+
+- **Phase 1 — TypeScript migration & typed state**
+  - Every file in `src/` converted from `.js`/`.jsx` to `.ts`/`.tsx`
+    under a strict `tsconfig.json`; `npm run build` now runs `tsc
+    --noEmit` before `vite build`, and `npm run typecheck` runs it
+    standalone.
+  - New `src/types/index.ts`: `RateTable`, `AppPrefs`, `RatesCache`,
+    `HistoricalData`, `HistoryPoint`, `Status`, `Timeframe`.
+  - `convert.ts`'s `rateBetween()`/`convertAmount()` validate numeric
+    finiteness explicitly instead of relying on truthy/`isNaN` checks.
+  - `App.tsx`'s ad-hoc `setPrefs()` callbacks replaced by a typed
+    `useReducer` (`src/reducers/prefsReducer.ts`) isolating five
+    actions: `SET_BASE`, `SET_TARGET`, `SWAP_PAIR`, `TOGGLE_FAVORITE`,
+    `UPDATE_BASKET`.
+- **Phase 2 — Offline & IndexedDB data layer**
+  - New `src/lib/db.ts`: a three-tier fallback chain (IndexedDB
+    `"history_cache"` store, via `idb-keyval` → `localStorage` → an
+    in-memory `Map`), backing the historical rate series so the trend
+    chart can render from cache when offline.
+  - PWA via `vite-plugin-pwa`: a generated Workbox service worker with
+    Stale-While-Revalidate caching for `open.er-api.com` and
+    `api.frankfurter.dev`, precaching all built JS/CSS/HTML/font
+    assets, plus an installable manifest (`public/icon.svg`).
+  - New `OfflineBanner` (driven by a `useOnlineStatus()` hook) shows a
+    top-of-page indicator whenever the browser reports no connection
+    at all, distinct from the existing per-result "cached rates" badge.
+- **Phase 3 — UI, charting & utility enhancements**
+  - `HistoryChart.tsx` gained a 7D/30D/90D/1Y timeframe switcher, each
+    window cached independently.
+  - `AmountPanel.tsx` gained a Fee & Markup calculator (0% / +0.5% /
+    +1.5% / +3%) — `applyMarkup()` folds the selected markup into the
+    rate/amount shown in the result panel and every basket row, with
+    an "incl. X% fee" label; the raw live rate is still the default.
+  - New `src/components/Matrix.tsx` — an N x N comparative exchange
+    matrix over the favorites list.
+  - `format.ts`'s `fmt()`/`rawNum()` now format using the browser's
+    `navigator.language` (`getLocale()`, overridable per call) instead
+    of a hardcoded `en-US`.
+- **Phase 4 — Automation, CI/CD & CLI utility**
+  - New `bin/exchangeboard.js` — a dependency-free terminal CLI
+    (`npx exchangeboard convert 100 USD EUR`, `rates USD`, `--json`,
+    `--refresh`), fetching `open.er-api.com` directly with a 1-hour
+    local file cache at `~/.exchangeboard/rates-cache.json`.
+  - New `.github/workflows/ci.yml` — typecheck + full Vitest suite on
+    every push/PR, plus a production `vite build` gated by a strict
+    bundle-size budget (`scripts/check-bundle-size.mjs`).
+- Test suite grew from 21 to 33 Vitest tests (db.ts fallback chain,
+  `applyMarkup`, locale overrides, the new Matrix component).
 
 ## v1.2.0 — 2026-08-09
 

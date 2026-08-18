@@ -1,69 +1,75 @@
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { colors, fonts } from "./styles/tokens.js";
 import { QUICK_PICKS } from "./data/currencyNames.js";
 import { fetchRates, getCachedRates } from "./lib/api.js";
-import { convertAmount, rateBetween } from "./lib/convert.js";
+import { fetchCryptoRatesSafe } from "./lib/crypto.js";
+import { applyMarkup, convertAmount, rateBetween } from "./lib/convert.js";
 import { loadJSON, saveJSON } from "./lib/storage.js";
-import Ticker from "./components/Ticker.jsx";
-import AmountPanel from "./components/AmountPanel.jsx";
-import CurrencySelect from "./components/CurrencySelect.jsx";
-import ResultPanel from "./components/ResultPanel.jsx";
-import HistoryChart from "./components/HistoryChart.jsx";
-import Basket from "./components/Basket.jsx";
-
-const defaultPrefs = { base: "USD", target: "EUR", favorites: [], basket: [] };
+import { defaultPrefs, prefsReducer } from "./reducers/prefsReducer.js";
+import { useOnlineStatus } from "./hooks/useOnlineStatus.js";
+import Ticker from "./components/Ticker.js";
+import AmountPanel from "./components/AmountPanel.js";
+import CurrencySelect from "./components/CurrencySelect.js";
+import ResultPanel from "./components/ResultPanel.js";
+import HistoryChart from "./components/HistoryChart.js";
+import Basket from "./components/Basket.js";
+import Matrix from "./components/Matrix.js";
+import OfflineBanner from "./components/OfflineBanner.js";
+import type { RateTable, Status } from "./types/index.js";
 
 export default function App() {
-  const [rates, setRates] = useState(null);
-  const [asOf, setAsOf] = useState(null);
+  const online = useOnlineStatus();
+  const [rates, setRates] = useState<RateTable | null>(null);
+  const [asOf, setAsOf] = useState<string | null>(null);
   const [stale, setStale] = useState(false); // true when showing a cached fallback table
-  const [status, setStatus] = useState("loading"); // loading | ready | error
+  const [status, setStatus] = useState<Status>("loading");
 
-  const [prefs, setPrefs] = useState(() => loadJSON("prefs", defaultPrefs));
+  const [prefs, dispatch] = useReducer(prefsReducer, undefined, () =>
+    loadJSON("prefs", defaultPrefs)
+  );
   const { base, target, favorites, basket } = prefs;
   const [amount, setAmount] = useState("1");
+  const [markupPct, setMarkupPct] = useState(0); // Fee/markup calculator (Phase 3) -- 0 = live mid-market rate
 
   useEffect(() => {
     saveJSON("prefs", prefs);
   }, [prefs]);
 
-  const setBase = (code) => setPrefs((p) => ({ ...p, base: code }));
-  const setTarget = (code) => setPrefs((p) => ({ ...p, target: code }));
-  const swap = () => setPrefs((p) => ({ ...p, base: p.target, target: p.base }));
+  const setBase = (code: string) => dispatch({ type: "SET_BASE", code });
+  const setTarget = (code: string) => dispatch({ type: "SET_TARGET", code });
+  const swap = () => dispatch({ type: "SWAP_PAIR" });
+  const toggleFavorite = (code: string) => dispatch({ type: "TOGGLE_FAVORITE", code });
 
-  const toggleFavorite = (code) =>
-    setPrefs((p) => ({
-      ...p,
-      favorites: p.favorites.includes(code)
-        ? p.favorites.filter((c) => c !== code)
-        : [...p.favorites, code],
-    }));
+  const addToBasket = (code: string) => {
+    if (!basket.includes(code)) dispatch({ type: "UPDATE_BASKET", basket: [...basket, code] });
+  };
+  const removeFromBasket = (code: string) =>
+    dispatch({ type: "UPDATE_BASKET", basket: basket.filter((c) => c !== code) });
 
-  const addToBasket = (code) =>
-    setPrefs((p) => (p.basket.includes(code) ? p : { ...p, basket: [...p.basket, code] }));
-  const removeFromBasket = (code) =>
-    setPrefs((p) => ({ ...p, basket: p.basket.filter((c) => c !== code) }));
-
-  const loadRates = () => {
+  const loadRates = async () => {
     setStatus("loading");
-    fetchRates()
-      .then(({ rates, asOf }) => {
-        setRates(rates);
-        setAsOf(asOf);
-        setStale(false);
+    try {
+      const { rates: fiatRates, asOf: liveAsOf } = await fetchRates();
+      // Crypto rides along with the fiat table but never blocks it -- a
+      // CoinGecko outage just means the crypto codes are briefly absent
+      // (or served from their own cache), never a failure for the app.
+      const cryptoRates = await fetchCryptoRatesSafe();
+      setRates({ ...fiatRates, ...cryptoRates });
+      setAsOf(liveAsOf);
+      setStale(false);
+      setStatus("ready");
+    } catch {
+      const cached = getCachedRates();
+      if (cached) {
+        const cryptoRates = await fetchCryptoRatesSafe();
+        setRates({ ...cached.rates, ...cryptoRates });
+        setAsOf(cached.asOf);
+        setStale(true);
         setStatus("ready");
-      })
-      .catch(() => {
-        const cached = getCachedRates();
-        if (cached) {
-          setRates(cached.rates);
-          setAsOf(cached.asOf);
-          setStale(true);
-          setStatus("ready");
-        } else {
-          setStatus("error");
-        }
-      });
+      } else {
+        setStatus("error");
+      }
+    }
   };
 
   useEffect(() => {
@@ -71,8 +77,9 @@ export default function App() {
   }, []);
 
   const numericAmount = parseFloat(amount);
-  const rate = rates ? rateBetween(rates, base, target) : null;
-  const converted = rates ? convertAmount(numericAmount, rates, base, target) : null;
+  const rate = rates ? applyMarkup(rateBetween(rates, base, target), markupPct) : null;
+  const rawConverted = rates ? convertAmount(numericAmount, rates, base, target) : null;
+  const converted = rawConverted !== null ? applyMarkup(rawConverted, markupPct) : null;
 
   const tickerCurrencies = QUICK_PICKS.filter((c) => c !== base && rates && rates[c]);
 
@@ -87,6 +94,7 @@ export default function App() {
         flexDirection: "column",
       }}
     >
+      <OfflineBanner offline={!online} />
       <Ticker tickerCurrencies={tickerCurrencies} rates={rates} base={base} />
 
       <style>{`
@@ -120,7 +128,8 @@ export default function App() {
             Global Currency Converter
           </h1>
           <p style={{ color: colors.textSecondary, fontSize: 14, marginTop: 6 }}>
-            Convert between any two of ~160 currencies, live.
+            Convert between any two of ~160 live currencies, from a
+            170-currency ISO 4217 catalog.
           </p>
         </div>
 
@@ -133,6 +142,8 @@ export default function App() {
           excludeCode={target}
           favorites={favorites}
           onToggleFavorite={toggleFavorite}
+          markupPct={markupPct}
+          onMarkupChange={setMarkupPct}
         />
 
         <div
@@ -187,6 +198,7 @@ export default function App() {
           stale={stale}
           asOf={asOf}
           onRetry={loadRates}
+          markupPct={markupPct}
         />
 
         {status === "ready" && <HistoryChart base={base} target={target} />}
@@ -196,11 +208,14 @@ export default function App() {
             rates={rates}
             base={base}
             amount={amount}
+            markupPct={markupPct}
             codes={basket}
             onAdd={addToBasket}
             onRemove={removeFromBasket}
           />
         )}
+
+        {status === "ready" && <Matrix rates={rates} favorites={favorites} />}
 
         <div
           style={{

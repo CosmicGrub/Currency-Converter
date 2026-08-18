@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import App from "./App.jsx";
+import type { Mock } from "vitest";
+import App from "./App.js";
 
 const mockRatesResponse = {
   result: "success",
@@ -39,7 +40,7 @@ describe("App", () => {
   });
 
   it("falls back to an error state when the fetch fails and no cache exists", async () => {
-    fetch.mockImplementation(() => Promise.reject(new Error("network down")));
+    (fetch as unknown as Mock).mockImplementation(() => Promise.reject(new Error("network down")));
 
     render(<App />);
 

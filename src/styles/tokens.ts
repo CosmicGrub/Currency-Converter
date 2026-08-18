@@ -13,9 +13,9 @@ export const colors = {
   border: "#1E2A44",
   borderAlt: "#24314F",
   error: "#E36868",
-};
+} as const;
 
 export const fonts = {
   mono: "'JetBrains Mono', 'IBM Plex Mono', monospace",
   sans: "'Inter', 'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif",
-};
+} as const;

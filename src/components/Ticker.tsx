@@ -1,9 +1,16 @@
 import { colors, fonts } from "../styles/tokens.js";
 import { rateBetween } from "../lib/convert.js";
+import type { RateTable } from "../types/index.js";
+
+export interface TickerProps {
+  tickerCurrencies: string[];
+  rates: RateTable | null;
+  base: string;
+}
 
 /** Scrolling exchange-board ticker strip showing quick-pick currency rates
  *  relative to whatever the user has picked as their base currency. */
-export default function Ticker({ tickerCurrencies, rates, base }) {
+export default function Ticker({ tickerCurrencies, rates, base }: TickerProps) {
   return (
     <div
       style={{

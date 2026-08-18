@@ -4,22 +4,30 @@
 // ---------------------------------------------------------------------------
 const NAMESPACE = "exchangeboard";
 
-const key = (name) => `${NAMESPACE}:${name}`;
+const key = (name: string) => `${NAMESPACE}:${name}`;
 
-export function loadJSON(name, fallback) {
+export function loadJSON<T>(name: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key(name));
     if (raw === null) return fallback;
-    return JSON.parse(raw);
+    return JSON.parse(raw) as T;
   } catch {
     return fallback;
   }
 }
 
-export function saveJSON(name, value) {
+export function saveJSON<T>(name: string, value: T): void {
   try {
     localStorage.setItem(key(name), JSON.stringify(value));
   } catch {
     // storage unavailable/full -- silently no-op, app still works in-memory
+  }
+}
+
+export function removeJSON(name: string): void {
+  try {
+    localStorage.removeItem(key(name));
+  } catch {
+    // storage unavailable -- silently no-op
   }
 }

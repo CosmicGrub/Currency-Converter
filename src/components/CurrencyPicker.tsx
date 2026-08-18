@@ -1,6 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { colors } from "../styles/tokens.js";
 import { CURRENCY_NAMES } from "../data/currencyNames.js";
+import type { RateTable } from "../types/index.js";
+
+export interface CurrencyPickerProps {
+  rates: RateTable | null;
+  value: string;
+  onChange: (code: string) => void;
+  excludeCode?: string;
+  favorites?: string[];
+  onToggleFavorite?: (code: string) => void;
+  compact?: boolean;
+}
 
 /** Searchable currency combobox — the "which currency" control shared by the
  *  amount panel (compact pill) and the full from/to panels. Star icons let
@@ -13,14 +24,14 @@ export default function CurrencyPicker({
   favorites,
   onToggleFavorite,
   compact = false,
-}) {
+}: CurrencyPickerProps) {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
-  const boxRef = useRef(null);
+  const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const onClick = (e) => {
-      if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false);
+    const onClick = (e: MouseEvent) => {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false);
     };
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
@@ -29,7 +40,7 @@ export default function CurrencyPicker({
   const codes = useMemo(() => {
     if (!rates) return [];
     const all = Object.keys(rates).filter((c) => c !== excludeCode);
-    const isFav = (c) => favorites?.includes(c);
+    const isFav = (c: string) => favorites?.includes(c) ?? false;
     return all.sort((a, b) => {
       const favDiff = Number(isFav(b)) - Number(isFav(a));
       if (favDiff !== 0) return favDiff;
@@ -47,7 +58,7 @@ export default function CurrencyPicker({
     );
   }, [codes, search]);
 
-  const select = (c) => {
+  const select = (c: string) => {
     onChange(c);
     setOpen(false);
     setSearch("");
