@@ -150,6 +150,7 @@ Google Drive folder.
 - [`docs/DEVICE_TABLET.md`](docs/DEVICE_TABLET.md) — Galaxy Tab layout tuning
 - [`docs/DEVICE_WATCH6_CLASSIC.md`](docs/DEVICE_WATCH6_CLASSIC.md) — Wear OS rotary input, ambient mode, complication
 - [`docs/FEATURE_ALERTS_AND_PRESETS.md`](docs/FEATURE_ALERTS_AND_PRESETS.md) — rate alerts + named basket presets
+- [`docs/BUILD_STEPS.md`](docs/BUILD_STEPS.md) — per-device build/install steps (Fold5, Tab, Watch6 Classic)
 
 ## Roadmap
 

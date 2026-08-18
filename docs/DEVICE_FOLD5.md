@@ -4,7 +4,9 @@
 `device/galaxy-z-fold5`, combined with the Galaxy Tab and alerts/presets
 branches into one unified default build by request — see `CHANGELOG.md`).
 Everything below still describes exactly what this code does; only the
-"separate variant" framing is out of date.
+"separate variant" framing is out of date — in particular, the
+`versionName` suffix mentioned in the v1 section below no longer applies
+(`main` uses a plain version number, currently `1.5.0`, for every device).
 
 ## History
 
