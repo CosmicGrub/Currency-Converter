@@ -36,13 +36,14 @@
     max-width: 960px;
     grid-template-columns: 1fr 1fr;
     grid-template-areas:
-      "header  header"
-      "amount  convert"
-      "swap    swap"
-      "result  result"
-      "history matrix"
-      "basket  basket"
-      "footer  footer";
+      "header   header"
+      "amount   convert"
+      "swap     swap"
+      "result   result"
+      "history  matrix"
+      "basket   basket"
+      "insights quiz"
+      "footer   footer";
     gap: 4px 20px;
     align-items: start;
   }
@@ -72,6 +73,12 @@
   .eb-basket {
     grid-area: basket;
   }
+  .eb-insights {
+    grid-area: insights;
+  }
+  .eb-quiz {
+    grid-area: quiz;
+  }
   .eb-footer {
     grid-area: footer;
   }
@@ -83,4 +90,46 @@
   .eb-container {
     padding: 20px 14px 40px;
   }
+}
+
+/* ---------------------------------------------------------------------------
+ * Flex mode -- the Fold5 propped open in tabletop/laptop posture, hinge
+ * horizontal, screen half-opened. This is applied via JS (App.tsx, driven
+ * by the *real* hinge state from src/lib/foldState.ts / the native
+ * FoldStatePlugin), never by a media query alone: this posture reports
+ * the exact same viewport dimensions as fully-unfolded-flat, so only the
+ * platform's actual hinge-angle sensor can tell the two apart.
+ *
+ * Splits into two stacked regions at the *actual* hinge position
+ * (--hinge-top-fraction, set inline in App.tsx from the native
+ * FoldingFeature's reported bounds) instead of guessing 50/50: the top
+ * region holds the primary "look at it" controls (amount/convert/result),
+ * sized to roughly match the screen above the crease; the bottom region
+ * holds the secondary "scan/scroll" content (history, matrix, basket,
+ * insights, quiz) and scrolls independently, the natural way people
+ * actually use tabletop mode -- top half as the display, bottom half as
+ * the surface they're looking down into.
+ * ------------------------------------------------------------------------- */
+.eb-container.flex-mode {
+  display: flex;
+  flex-direction: column;
+  max-width: 960px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.eb-flex-top {
+  flex: 0 0 var(--hinge-top-fraction, 50%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.eb-flex-bottom {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+  padding-top: 12px;
 }
