@@ -44,10 +44,11 @@ app). All four requested enhancements are included:
   rows (`.take(3)` off the now-longer `RateFetcher` list) — a Tile that
   needs scrolling would defeat the point of a Tile; the full 12-currency
   scrollable list lives in the companion activity.
-- `android/wear/build.gradle`: two new dependencies
-  (`androidx.wear:wear-ambient:1.0.1` for ambient mode,
-  `androidx.wear.watchface:watchface-complications-data-source-ktx:1.2.1`
-  for complications) and a `-watch6classic` `versionName` suffix.
+- `android/wear/build.gradle`: one new dependency
+  (`androidx.wear.watchface:watchface-complications-data-source-ktx:1.2.1`
+  for complications) and a `-watch6classic` `versionName` suffix. Ambient
+  mode needs no dependency of its own — `AmbientModeSupport` is part of
+  the already-present `androidx.wear:wear` artifact (see the note below).
 
 ## ⚠️ Verification status — please read before building
 
@@ -61,15 +62,25 @@ policy — confirmed via a 403 at the proxy, not a real outage). That means:
   `BoxInsetLayout`) that I'm confident in structurally, but there was no
   way to catch a typo, an API surface drift, or a Gradle resolution
   failure before it first shipped.
-- **The two new dependency versions (`wear-ambient:1.0.1`,
-  `watchface-complications-data-source-ktx:1.2.1`) could not be checked
-  against the current Google Maven index** from that sandbox.
+- **The dependency versions could not be checked against the current
+  Google Maven index** from that sandbox, and one was wrong: the
+  originally-added `androidx.wear:wear-ambient:1.0.1` line doesn't exist
+  as a Maven artifact — CI's first real build failed with `Could not
+  find androidx.wear:wear-ambient:1.0.1`. `AmbientModeSupport` (package
+  `androidx.wear.ambient`) actually ships inside the `androidx.wear:wear`
+  artifact already listed above, not a separate `wear-ambient` one.
+  Removed the bogus line; no functional change, since the real
+  dependency was already present. `watchface-complications-data-source-
+  ktx:1.2.1` checked out fine against the real Maven index and needed no
+  change.
 - **CI now compiles this on every push.** The `android` job in
   `.github/workflows/ci.yml` runs `./gradlew :wear:assembleDebug` on a
   GitHub-hosted runner (real Android SDK, full internet access) — that's
   the typo/API-drift/dependency-resolution check this used to be missing,
-  and it'll catch a stale dependency version automatically. Check the
-  job's status on the commit you care about.
+  and its first two runs already caught real mistakes (this one, plus a
+  wrong import package in the Fold5 hinge plugin — see
+  `docs/DEVICE_FOLD5.md`). Check the job's status on the commit you care
+  about.
 - **Runtime behavior still needs a real device or emulator** — CI proves
   the code builds, not that the rotary input feels right in hand, that
   ambient mode's redraw timing looks correct, or that the complication
