@@ -101,6 +101,17 @@ Jetpack WindowManager 1.0), but it was not compiled by hand there, and the
 two dependency versions couldn't be checked against the current Maven
 index at the time.
 
+**Update: the new CI job caught a real bug on its first run.** The
+`import androidx.window.layout.WindowInfoTrackerCallbackAdapter` line was
+wrong — that class ships in `androidx.window:window-java`, but under the
+`androidx.window.java.layout` package, not `androidx.window.layout`
+(where the core Kotlin-first `WindowInfoTracker`/`WindowLayoutInfo`/
+`FoldingFeature` classes live, from the plain `androidx.window:window`
+artifact). Three `cannot find symbol` errors, fixed by correcting the one
+import line. This is exactly the class of mistake the "unverified by a
+real compile" caveat always warned about — now caught automatically
+instead of surfacing on someone's first real Android Studio build.
+
 CI now closes the compile-time half of that gap: the `android` job in
 `.github/workflows/ci.yml` runs `:app:assembleDebug` (which includes this
 plugin and both `androidx.window` dependencies) on a GitHub-hosted
