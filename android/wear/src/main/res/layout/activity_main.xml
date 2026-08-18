@@ -11,7 +11,7 @@
     android:background="#0B1220">
 
     <!-- The rates list can now be longer than fits on screen (see
-         RateFetcher's expanded QUICK_CODES) -- scrollable, and driven by
+         RateFetcher's expanded QUICK_CODES) — scrollable, and driven by
          the physical rotating bezel via MainActivity's rotary handling,
          not just touch/swipe. -->
     <ScrollView
@@ -44,7 +44,7 @@
                 android:letterSpacing="0.1"
                 android:textStyle="bold" />
 
-            <!-- Populated dynamically in MainActivity.render() -- one row
+            <!-- Populated dynamically in MainActivity.render() — one row
                  per RateFetcher.QUICK_CODES entry, so the row count isn't
                  hardcoded into the layout. -->
             <LinearLayout
