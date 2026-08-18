@@ -58,3 +58,75 @@ jobs:
           name: dist
           path: dist
           retention-days: 7
+
+  android:
+    name: Android build (app + wear)
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app (dist/)
+        run: npm run build
+
+      - name: Sync web build into the Capacitor Android shell
+        run: npx cap sync android
+
+      # Capacitor 8's generated android/app/capacitor.build.gradle sets
+      # sourceCompatibility/targetCompatibility to JavaVersion.VERSION_21 --
+      # the Gradle JVM has to be at least JDK 21 to compile that (a JVM can
+      # target older bytecode than itself, never newer). The :wear module
+      # separately targets JDK 17 bytecode, which JDK 21 compiles down to
+      # fine, so one JDK version covers both modules.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      # Installs/updates Android cmdline-tools and accepts all SDK
+      # licenses non-interactively -- without this, Gradle's on-demand
+      # download of compileSdk/targetSdk 36 (see android/variables.gradle)
+      # can fail CI with "You have not accepted the license agreements"
+      # even when a base SDK is already preinstalled on the runner image.
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # android/gradlew is checked in without the executable bit (mode
+      # 100644), so a fresh checkout can't run it directly.
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      # Builds both real modules that ship from this repo -- :app covers
+      # every phone/tablet device (Fold5 flex mode + hinge plugin, Galaxy
+      # Tab's extra-wide tier, and every other device all build from this
+      # one unified module as of v1.5.0), :wear is the separate Watch6
+      # Classic companion with its own applicationId. This is the actual
+      # compile verification the native code has never had -- everything
+      # here was previously written and reviewed in a sandbox with no
+      # Android SDK and no network access to dl.google.com, so it was
+      # never run through a real Gradle build before landing on main.
+      - name: Build phone/tablet app (:app)
+        working-directory: android
+        run: ./gradlew :app:assembleDebug --stacktrace
+
+      - name: Build Wear OS companion (:wear)
+        working-directory: android
+        run: ./gradlew :wear:assembleDebug --stacktrace
+
+      - name: Upload debug APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-debug-apks
+          path: |
+            android/app/build/outputs/apk/debug/*.apk
+            android/wear/build/outputs/apk/debug/*.apk
+          retention-days: 7

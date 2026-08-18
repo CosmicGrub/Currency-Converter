@@ -48,8 +48,9 @@ about conversion logic, data sources, or persisted state changed.
 - The `android/app` Capacitor shell itself is unchanged beyond the
   `versionName` bump — no native code was touched. This wasn't compiled
   in the sandbox this branch was authored in (no Android SDK available
-  there); build normally via Android Studio / `./gradlew assembleDebug`
-  before installing.
+  there); the `android` job in `.github/workflows/ci.yml` now runs
+  `./gradlew :app:assembleDebug` on every push, so check that job's
+  status on the commit you care about before installing.
 
 ## Try it without a Tab
 

@@ -20,23 +20,30 @@ and `docs/DEVICE_WATCH6_CLASSIC.md`.
 
 ## ⚠️ Before you build: verification status
 
-None of the native Android/Kotlin/Java code in this project has been
-compiled in the sandbox it was authored in — there's no Android SDK and
-no network access to `dl.google.com` there, only to the web app's own
-dependencies. Concretely, unverified by a real compile:
+**CI now compiles both native modules on every push** (the `android` job
+in `.github/workflows/ci.yml` — `:app:assembleDebug` and
+`:wear:assembleDebug` on a GitHub-hosted runner, which has a real Android
+SDK and full internet access, unlike the sandbox this code was originally
+authored in). That closes the biggest gap: a typo, an API surface drift,
+or a stale Gradle dependency version now fails CI instead of shipping
+silently. Check the `android` job's status on the commit/PR you care
+about before treating any given revision as "compiles clean."
 
-- `FoldStatePlugin.java` (Fold5 hinge detection) and the two
-  `androidx.window` Gradle dependencies it needs
+What CI **can't** check, because it's headless and has no device or
+emulator attached:
+
+- `FoldStatePlugin.java` (Fold5 hinge detection) — that it actually
+  receives real `FoldingFeature` events and the flex-mode split looks
+  right on real hardware
 - The Wear OS additions in `android/wear/` (rotary input, ambient mode,
-  the complication service) and the `androidx.wear.*` Gradle
-  dependencies they need
+  the complication service) — that rotary scrolling feels right, ambient
+  mode's palette/redraw timing looks correct, and the complication
+  actually renders on a watch face
 
-**Your first build of each module should happen in Android Studio**
-(or `./gradlew <task>` with a full Android SDK installed) — that's the
-first real check for a typo, an API surface drift, or a Gradle
-dependency-resolution failure. If either Gradle dependency version is
-stale by the time you build, bump it (Android Studio's "Upgrade"
-suggestion or a quick check of Maven Central will tell you). Everything
+**Your first *hardware* check of each module should still happen on a
+real device or a matching emulator profile** (Android Studio's foldable
+profile for flex mode, a round Wear OS profile for the watch) — CI proves
+the code builds, not that it behaves correctly at runtime. Everything
 in `src/` (the actual web app) is unaffected by any of this and is
 fully verified — see the Verification section in each device doc and in
 `CHANGELOG.md`.

@@ -55,23 +55,27 @@ This branch was authored in a sandbox with **no Android SDK and no
 network access to `dl.google.com`** (blocked by the sandbox's egress
 policy — confirmed via a 403 at the proxy, not a real outage). That means:
 
-- **Nothing here was compiled.** The Kotlin/XML is written carefully
-  against long-stable, well-documented Wear OS APIs (rotary input,
-  `AmbientModeSupport`, `ComplicationDataSourceService`,
+- **Nothing here was compiled by hand at the time.** The Kotlin/XML is
+  written carefully against long-stable, well-documented Wear OS APIs
+  (rotary input, `AmbientModeSupport`, `ComplicationDataSourceService`,
   `BoxInsetLayout`) that I'm confident in structurally, but there was no
   way to catch a typo, an API surface drift, or a Gradle resolution
-  failure before you build it.
+  failure before it first shipped.
 - **The two new dependency versions (`wear-ambient:1.0.1`,
   `watchface-complications-data-source-ktx:1.2.1`) could not be checked
-  against the current Google Maven index.** Please verify (or let
-  Android Studio's dependency resolution / "Upgrade" suggestions do it)
-  before building — bump if either is stale or unresolvable.
-- **First real build should happen in Android Studio** (or
-  `./gradlew :wear:assembleDebug` with a full Android SDK available) —
-  fix anything that surfaces there, then sideload to a Watch6 Classic
-  (or the Wear OS emulator with a round, bezel-equipped profile) to
-  confirm the rotary input actually feels right in hand — that's not
-  something any of this can be verified from source alone.
+  against the current Google Maven index** from that sandbox.
+- **CI now compiles this on every push.** The `android` job in
+  `.github/workflows/ci.yml` runs `./gradlew :wear:assembleDebug` on a
+  GitHub-hosted runner (real Android SDK, full internet access) — that's
+  the typo/API-drift/dependency-resolution check this used to be missing,
+  and it'll catch a stale dependency version automatically. Check the
+  job's status on the commit you care about.
+- **Runtime behavior still needs a real device or emulator** — CI proves
+  the code builds, not that the rotary input feels right in hand, that
+  ambient mode's redraw timing looks correct, or that the complication
+  actually renders on a watch face. Sideload to a Watch6 Classic (or the
+  Wear OS emulator with a round, bezel-equipped profile) to confirm that
+  part — nothing compiles that away.
 
 The rest of the repo (the web app, the other two device branches) went
 through `npm run typecheck` / `npm test` / `npm run build` — this branch's
