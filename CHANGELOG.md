@@ -1,5 +1,37 @@
 # ExchangeBoard — Changelog
 
+## v1.4.0 — 2026-08-19
+
+Curated cryptocurrency support, converting alongside fiat.
+
+- New `src/lib/crypto.ts`: a fixed, curated list of 10 blue-chip
+  cryptocurrencies with long, uninterrupted trading histories on major
+  regulated exchanges — `BTC`, `ETH`, `XRP`, `BCH`, `LTC`, `XLM`,
+  `ETC`, `ADA`, `TRX`, `BNB`. Deliberately excludes stablecoins (just a
+  fiat peg, not a distinct asset) and meme-origin/trending coins. This
+  is a product decision, not a technical one — the list lives in one
+  place (`CRYPTO_ASSETS`) if it ever needs to change.
+- Live prices come from CoinGecko's free `/simple/price` endpoint (no
+  API key, CORS-enabled, same pattern as the app's other two data
+  sources) and are inverted (`1 / priceUSD`) into the same USD-indexed
+  `rates` shape fiat already uses, then merged in — so the picker,
+  ticker, basket, and favorites matrix all support crypto with **zero**
+  changes to `rateBetween`/`convertAmount` or any component.
+- Fully optional and non-blocking: a CoinGecko outage never affects
+  fiat conversion. Crypto rates get their own 1-day localStorage cache
+  (`exchangeboard:cryptoRatesCache`) with the same
+  live-then-cached-then-empty fallback chain as the fiat rate cache,
+  and their own Stale-While-Revalidate PWA runtime-cache entry.
+- `format.ts`'s non-ISO fallback path (which every crypto code hits,
+  since `Intl.NumberFormat` only recognizes ISO 4217 currencies) now
+  gets the same extra sub-1 precision fiat already gets in the ISO
+  path, instead of a flat 4 decimals.
+- 10 new tests for `crypto.ts` (rate inversion, live fetch + cache,
+  fallback-to-cache on network failure, safe empty-result path) plus
+  a `CURRENCY_NAMES` regression test confirming the crypto merge.
+  48/48 tests passing, `tsc --noEmit` clean, bundle size ~57KB gzip
+  (unchanged, well under the 300KB CI budget).
+
 ## v1.3.1 — 2026-08-19
 
 Full ISO 4217 currency-name coverage pass.

@@ -14,14 +14,20 @@ describe("CURRENCY_NAMES", () => {
     }
   });
 
-  it("covers a comprehensive set of currently-circulating currencies (170+)", () => {
+  it("covers a comprehensive set of currently-circulating currencies plus crypto (179+)", () => {
     // Regression guard for the ISO 4217 completeness pass -- fails loudly if
     // entries are accidentally dropped in a future edit.
-    expect(Object.keys(CURRENCY_NAMES).length).toBeGreaterThanOrEqual(169);
+    expect(Object.keys(CURRENCY_NAMES).length).toBeGreaterThanOrEqual(179);
   });
 
   it("includes the recently-introduced/redenominated codes rounding out coverage", () => {
     for (const code of ["BYN", "SSP", "SVC", "SLE", "XCG", "VED", "ZWG", "ZWL", "XDR", "XPD", "XPT"]) {
+      expect(CURRENCY_NAMES).toHaveProperty(code);
+    }
+  });
+
+  it("includes the curated blue-chip crypto assets", () => {
+    for (const code of ["BTC", "ETH", "XRP", "BCH", "LTC", "XLM", "ETC", "ADA", "TRX", "BNB"]) {
       expect(CURRENCY_NAMES).toHaveProperty(code);
     }
   });

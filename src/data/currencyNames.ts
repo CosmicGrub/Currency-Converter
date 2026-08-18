@@ -1,7 +1,9 @@
+import { CRYPTO_NAMES } from "../lib/crypto.js";
+
 // ---------------------------------------------------------------------------
 // ISO 4217 currency names — full name + code, used to populate the selector.
 // ---------------------------------------------------------------------------
-export const CURRENCY_NAMES: Record<string, string> = {
+const FIAT_NAMES: Record<string, string> = {
   USD: "United States Dollar", EUR: "Euro", GBP: "British Pound Sterling",
   JPY: "Japanese Yen", CHF: "Swiss Franc", CAD: "Canadian Dollar",
   AUD: "Australian Dollar", NZD: "New Zealand Dollar", CNY: "Chinese Yuan",
@@ -66,5 +68,10 @@ export const CURRENCY_NAMES: Record<string, string> = {
   ZWG: "Zimbabwe Gold", ZWL: "Zimbabwean Dollar",
   XDR: "IMF Special Drawing Rights", XPD: "Palladium Ounce", XPT: "Platinum Ounce",
 };
+
+/** Fiat (ISO 4217) names plus the curated crypto asset names from
+ *  src/lib/crypto.ts -- one lookup for every currency the picker, search,
+ *  basket, and matrix can display, whichever data source it came from. */
+export const CURRENCY_NAMES: Record<string, string> = { ...FIAT_NAMES, ...CRYPTO_NAMES };
 
 export const QUICK_PICKS = ["EUR", "GBP", "JPY", "CAD", "AUD", "INR", "CNY", "MXN"];

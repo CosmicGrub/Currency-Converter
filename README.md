@@ -5,14 +5,18 @@ target currency from a searchable dropdown (full name + ISO code, e.g. "Euro
 (EUR)"), and watch the converted amount update instantly — no "=" button,
 calculator-style live result.
 
-![status](https://img.shields.io/badge/status-v1.3.1-C9A227)
+![status](https://img.shields.io/badge/status-v1.4.0-C9A227)
 
 ## Features
 
-- Live conversion between **any two** of ~160 live-rate currencies (not
-  just from USD), instant on input, currency, or base change — swap sides
-  with ⇅; a 169-code ISO 4217 name catalog backs the picker so nearly
-  every currency the live API returns gets a real display name
+- Live conversion between **any two** of ~160 live-rate fiat currencies
+  (not just from USD), instant on input, currency, or base change — swap
+  sides with ⇅; a 169-code ISO 4217 name catalog backs the picker so
+  nearly every currency the live API returns gets a real display name
+- 10 curated blue-chip cryptocurrencies (BTC, ETH, XRP, BCH, LTC, XLM,
+  ETC, ADA, TRX, BNB) convert right alongside fiat — a fixed,
+  long-track-record list, no stablecoins or meme-origin coins, no
+  trending/"here today gone tomorrow" tokens
 - Full name + ISO code shown for every currency, searchable dropdown on
   both sides, favorites (★) that float to the top and lead the quick-pick chips
 - 7D/30D/90D/1Y historical rate trend chart for the current pair
@@ -39,9 +43,11 @@ calculator-style live result.
 - [`idb-keyval`](https://github.com/jakearchibald/idb-keyval) for the IndexedDB historical-data cache
 - No CSS framework — hand-styled with a dark "exchange board" palette (see
   [`src/styles/tokens.ts`](src/styles/tokens.ts))
-- Data sources (both free, no API key, CORS-enabled):
-  - [`open.er-api.com`](https://open.er-api.com/v6/latest/USD) — live rates, ~160 currencies, updated ~daily
+- Data sources (all free, no API key, CORS-enabled):
+  - [`open.er-api.com`](https://open.er-api.com/v6/latest/USD) — live fiat rates, ~160 currencies, updated ~daily
   - [`frankfurter.dev`](https://api.frankfurter.dev) — historical series for the trend chart, ~30 currencies
+  - [`coingecko.com`](https://api.coingecko.com/api/v3/simple/price) — live prices for the curated crypto list,
+    inverted and merged into the same `rates` table as fiat; optional and non-blocking
 - All conversion math runs client-side off one USD-indexed rate table
   (`amount * (rates[target] / rates[base])`) — no extra network calls per
   keystroke or per base/target change
@@ -91,11 +97,12 @@ src/
   data/currencyNames.ts   # ISO 4217 code -> full name map, quick-pick list
   lib/
     api.ts                   # fetchRates() + getCachedRates() — open.er-api.com + offline cache
-    convert.ts                # rateBetween()/convertAmount()/applyMarkup() — base-agnostic conversion math
-    db.ts                      # IndexedDB -> localStorage -> memory fallback chain (history_cache store)
-    history.ts                  # fetchHistory() — frankfurter.dev time series, cached via db.ts
-    format.ts                    # fmt(), rawNum(), getLocale() — locale-aware Intl.NumberFormat
-    storage.ts                    # namespaced localStorage helpers
+    crypto.ts                 # CRYPTO_ASSETS (curated 10) + fetchCryptoRatesSafe() — coingecko.com
+    convert.ts                  # rateBetween()/convertAmount()/applyMarkup() — base-agnostic conversion math
+    db.ts                        # IndexedDB -> localStorage -> memory fallback chain (history_cache store)
+    history.ts                    # fetchHistory() — frankfurter.dev time series, cached via db.ts
+    format.ts                      # fmt(), rawNum(), getLocale() — locale-aware Intl.NumberFormat
+    storage.ts                      # namespaced localStorage helpers
   styles/tokens.ts          # design tokens (palette, fonts)
   components/
     Ticker.tsx               # scrolling rate ticker strip (base-aware)
@@ -131,8 +138,10 @@ Google Drive folder.
 The original backlog (multi-currency baskets, historical rate charts,
 offline/cached rates, favorites persistence, reverse conversion, automated
 tests) shipped in v1.2.0; TypeScript, PWA/offline architecture, the fee
-calculator, favorites matrix, and CLI/CI tooling shipped in v1.3.0. Open
-ideas: push-based rate alerts, CSV export of the basket, app shortcuts.
+calculator, favorites matrix, and CLI/CI tooling shipped in v1.3.0; full
+ISO 4217 currency-name coverage and curated blue-chip crypto shipped in
+v1.3.1/v1.4.0. Open ideas: push-based rate alerts, CSV export of the
+basket, app shortcuts.
 
 ## Android app
 

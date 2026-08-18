@@ -23,12 +23,16 @@ export const fmt = (n: number, code: string, locale: string = getLocale()): stri
       maximumFractionDigits: n < 1 ? 6 : 4,
     }).format(n);
   } catch {
+    // Intl.NumberFormat only recognizes ISO 4217 codes -- every crypto
+    // code (BTC, ETH, ...) always lands here, so sub-1 values get the
+    // same extra precision the ISO currency-style branch above gives
+    // sub-1 fiat amounts (a sub-cent price per unit is common for both).
     try {
-      return `${n.toLocaleString(locale, { maximumFractionDigits: 4 })} ${code}`;
+      return `${n.toLocaleString(locale, { maximumFractionDigits: n < 1 ? 8 : 4 })} ${code}`;
     } catch {
       // Unrecognized locale on top of an unrecognized currency code --
       // fall all the way back to the one locale Intl always supports.
-      return `${n.toLocaleString("en-US", { maximumFractionDigits: 4 })} ${code}`;
+      return `${n.toLocaleString("en-US", { maximumFractionDigits: n < 1 ? 8 : 4 })} ${code}`;
     }
   }
 };

@@ -2,9 +2,11 @@
 **Global any-currency-to-any-currency converter (React app)**
 
 ## Overview
-Live currency converter covering the ~160 currencies the live rate API
+Live currency converter covering the ~160 fiat currencies the live rate API
 returns, backed by a 169-code ISO 4217 name catalog (`src/data/
-currencyNames.ts`) for full display-name coverage. Any currency can be the
+currencyNames.ts`) for full display-name coverage, plus a curated set of 10
+blue-chip cryptocurrencies (BTC, ETH, XRP, BCH, LTC, XLM, ETC, ADA, TRX,
+BNB — see `src/lib/crypto.ts`). Any currency (fiat or crypto) can be the
 "from" (base) side, any currency can be the "to" (target) side — swap them
 with one tap. Full name + ISO code shown everywhere (e.g. "Euro (EUR)").
 Conversion updates instantly as the user types or changes either currency —
@@ -18,16 +20,25 @@ no "=" button, calculator-style live result.
   (IndexedDB `"history_cache"` store via `idb-keyval` → `localStorage` →
   in-memory `Map`) backs the historical rate series so the trend chart can
   render from cache when offline. The service worker additionally
-  precaches all static assets and Stale-While-Revalidates both API hosts.
-- **Data sources (both free, no API key, CORS-enabled):**
-  - `https://open.er-api.com/v6/latest/USD` — live rates, ~160 currencies,
-    updated ~daily. This is the *only* rate source; it's fetched once
-    (base=USD) and every base/target pair is derived from that single
-    table client-side (see Computation below) — no per-pair refetching.
+  precaches all static assets and Stale-While-Revalidates all three API
+  hosts (fiat rates, history, crypto).
+- **Data sources (all free, no API key, CORS-enabled):**
+  - `https://open.er-api.com/v6/latest/USD` — live fiat rates, ~160
+    currencies, updated ~daily. Fetched once (base=USD) and every
+    base/target pair is derived from that single table client-side (see
+    Computation below) — no per-pair refetching.
   - `https://api.frankfurter.dev/v1` — 30-day historical series for the
     sparkline chart, ~30 currencies (ECB reference rates). Formerly hosted
     at `frankfurter.app`, which now 301-redirects here *without* CORS
     headers — the `.dev` host must be called directly.
+  - `https://api.coingecko.com/api/v3/simple/price` — live prices (USD)
+    for the curated crypto list. Each price is inverted (`1 / priceUSD`)
+    and merged straight into the same USD-indexed `rates` table the fiat
+    data lives in (see `src/lib/crypto.ts`), so every feature built on
+    `rates` (picker, ticker, basket, matrix) works on crypto for free.
+    Optional and non-blocking: a CoinGecko failure never affects fiat
+    conversion, it just means the crypto codes are briefly unavailable
+    (or served from their own 1-day localStorage cache).
 - **State:** owned by a typed `useReducer` in `App.tsx`
   (`src/reducers/prefsReducer.ts`) for the persisted preference slice
   (`base`/`target`/`favorites`/`basket`, five actions: `SET_BASE`,
@@ -51,12 +62,13 @@ src/
   hooks/useOnlineStatus.ts   # navigator.onLine + online/offline event tracking
   data/currencyNames.ts   # ISO 4217 code -> full name map, quick-pick list
   lib/
-    api.ts                   # fetchRates() + getCachedRates() (offline fallback cache)
-    convert.ts                # rateBetween()/convertAmount()/applyMarkup() — base-agnostic math
-    db.ts                      # IndexedDB -> localStorage -> memory fallback chain (history_cache store)
-    history.ts                  # fetchHistory() — frankfurter.dev time series, cached via db.ts
-    format.ts                    # fmt(), rawNum(), getLocale() — locale-aware Intl.NumberFormat
-    storage.ts                    # namespaced localStorage helpers (never throws)
+    api.ts                   # fetchRates() + getCachedRates() — fiat, open.er-api.com (offline fallback cache)
+    crypto.ts                 # CRYPTO_ASSETS (curated 10) + fetchCryptoRatesSafe() — coingecko.com, merges into `rates`
+    convert.ts                  # rateBetween()/convertAmount()/applyMarkup() — base-agnostic math
+    db.ts                        # IndexedDB -> localStorage -> memory fallback chain (history_cache store)
+    history.ts                    # fetchHistory() — frankfurter.dev time series, cached via db.ts
+    format.ts                      # fmt(), rawNum(), getLocale() — locale-aware Intl.NumberFormat
+    storage.ts                      # namespaced localStorage helpers (never throws)
   styles/tokens.ts          # design tokens (palette, fonts)
   components/
     Ticker.tsx               # scrolling rate ticker strip (base-aware)
@@ -80,8 +92,9 @@ scripts/check-bundle-size.mjs  # CI bundle-size budget gate
 No server-side database. In-memory + `localStorage` (+ IndexedDB for
 history, see Architecture) only:
 ```ts
-rates: { [isoCode: string]: number }        // USD-indexed: 1 USD = rates[code] units, rates.USD === 1
-CURRENCY_NAMES: { [isoCode: string]: string } // static ISO 4217 name map
+rates: { [code: string]: number }          // USD-indexed: 1 USD = rates[code] units, rates.USD === 1
+                                            // (fiat from open.er-api.com + crypto from coingecko.com, merged)
+CURRENCY_NAMES: { [code: string]: string } // FIAT_NAMES (ISO 4217) + CRYPTO_NAMES, merged in currencyNames.ts
 
 // persisted as localStorage["exchangeboard:prefs"]
 prefs: {
@@ -89,7 +102,9 @@ prefs: {
   favorites: string[]; basket: string[];     // starred codes, basket codes
 }
 // persisted as localStorage["exchangeboard:ratesCache"]
-ratesCache: { rates: Record<string, number>; asOf: string } // last successful fetch, used offline
+ratesCache: { rates: Record<string, number>; asOf: string } // last successful fiat fetch, used offline
+// persisted as localStorage["exchangeboard:cryptoRatesCache"]
+cryptoRatesCache: { rates: Record<string, number>; fetchedAt: string } // last successful crypto fetch, used offline
 
 // backed by src/lib/db.ts (IndexedDB "history_cache" -> localStorage -> memory)
 history:{base}:{target}:{days}d -> HistoryPoint[]  // per-timeframe historical series cache
@@ -120,6 +135,10 @@ stale cache on network failure.
 ```json
 { "rates": { "2026-07-10": { "EUR": 0.87489 }, ... } }
 ```
+`GET https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,...&vs_currencies=usd`
+```json
+{ "bitcoin": { "usd": 65000.12 }, "ethereum": { "usd": 3400.50 }, ... }
+```
 
 ## UI architecture
 - Offline banner (top, conditional): shown whenever the browser reports no
@@ -143,8 +162,9 @@ stale cache on network failure.
 - Type: JetBrains Mono for numerals/rates, Inter/system sans for labels
 - Signature element: exchange-board ticker tape + instant "flip" result reveal
 
-## Status (v1.3.0 — 2026-08-14)
-- ✅ Any-currency-to-any-currency conversion, instant, with swap
+## Status (v1.4.0 — 2026-08-19)
+- ✅ Any-currency-to-any-currency conversion, instant, with swap —
+  169-code ISO 4217 fiat catalog + 10 curated blue-chip cryptocurrencies
 - ✅ Favorites (starred, persisted, lead the quick-pick chips) + N x N
   favorites comparison matrix
 - ✅ 7D/30D/90D/1Y historical rate trend chart, per-timeframe offline cache
@@ -159,11 +179,15 @@ stale cache on network failure.
   memory fallback for historical data
 - ✅ Locale-aware number/currency formatting (`Intl.NumberFormat` +
   `navigator.language`)
+- ✅ Curated crypto rates (BTC, ETH, XRP, BCH, LTC, XLM, ETC, ADA, TRX,
+  BNB) merged into the same USD-indexed `rates` table as fiat — CoinGecko,
+  free/no-key, optional/non-blocking, own 1-day offline cache
 - ✅ Terminal CLI (`bin/exchangeboard.js`, `npx exchangeboard convert/rates`)
 - ✅ GitHub Actions CI: typecheck, tests, build, bundle-size budget gate
-- ✅ Automated tests (Vitest + RTL, 33 tests: conversion math incl.
+- ✅ Automated tests (Vitest + RTL, 48 tests: conversion math incl.
   markup, formatters incl. locale overrides, storage/db fallback chain
-  edge cases, Matrix component, App smoke tests)
+  edge cases, crypto rate fetch/cache/fallback, currency-name data
+  quality, Matrix component, App smoke tests)
 - ✅ Real Vite + React project with git/GitHub, split into focused modules
 - ✅ Android app (Capacitor), merged to `main`, sideload-tested
 - ✅ Android home-screen widget — native `AppWidgetProvider`, own rate

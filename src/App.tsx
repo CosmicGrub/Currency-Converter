@@ -2,6 +2,7 @@ import { useEffect, useReducer, useState } from "react";
 import { colors, fonts } from "./styles/tokens.js";
 import { QUICK_PICKS } from "./data/currencyNames.js";
 import { fetchRates, getCachedRates } from "./lib/api.js";
+import { fetchCryptoRatesSafe } from "./lib/crypto.js";
 import { applyMarkup, convertAmount, rateBetween } from "./lib/convert.js";
 import { loadJSON, saveJSON } from "./lib/storage.js";
 import { defaultPrefs, prefsReducer } from "./reducers/prefsReducer.js";
@@ -45,26 +46,30 @@ export default function App() {
   const removeFromBasket = (code: string) =>
     dispatch({ type: "UPDATE_BASKET", basket: basket.filter((c) => c !== code) });
 
-  const loadRates = () => {
+  const loadRates = async () => {
     setStatus("loading");
-    fetchRates()
-      .then(({ rates, asOf }) => {
-        setRates(rates);
-        setAsOf(asOf);
-        setStale(false);
+    try {
+      const { rates: fiatRates, asOf: liveAsOf } = await fetchRates();
+      // Crypto rides along with the fiat table but never blocks it -- a
+      // CoinGecko outage just means the crypto codes are briefly absent
+      // (or served from their own cache), never a failure for the app.
+      const cryptoRates = await fetchCryptoRatesSafe();
+      setRates({ ...fiatRates, ...cryptoRates });
+      setAsOf(liveAsOf);
+      setStale(false);
+      setStatus("ready");
+    } catch {
+      const cached = getCachedRates();
+      if (cached) {
+        const cryptoRates = await fetchCryptoRatesSafe();
+        setRates({ ...cached.rates, ...cryptoRates });
+        setAsOf(cached.asOf);
+        setStale(true);
         setStatus("ready");
-      })
-      .catch(() => {
-        const cached = getCachedRates();
-        if (cached) {
-          setRates(cached.rates);
-          setAsOf(cached.asOf);
-          setStale(true);
-          setStatus("ready");
-        } else {
-          setStatus("error");
-        }
-      });
+      } else {
+        setStatus("error");
+      }
+    }
   };
 
   useEffect(() => {

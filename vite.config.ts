@@ -53,6 +53,16 @@ export default defineConfig({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
+          {
+            // Curated crypto rates -- api.coingecko.com/api/v3/simple/price
+            urlPattern: ({ url }) => url.hostname === "api.coingecko.com",
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "exchangeboard-crypto-cache",
+              expiration: { maxEntries: 8, maxAgeSeconds: 60 * 60 * 24 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
         ],
       },
       devOptions: {
