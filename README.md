@@ -5,7 +5,7 @@ target currency from a searchable dropdown (full name + ISO code, e.g. "Euro
 (EUR)"), and watch the converted amount update instantly — no "=" button,
 calculator-style live result.
 
-![status](https://img.shields.io/badge/status-v1.5.0-C9A227)
+![status](https://img.shields.io/badge/status-v1.5.1-C9A227)
 
 ## Features
 
@@ -134,7 +134,7 @@ src/
   test/setup.ts               # Vitest + RTL setup
 bin/exchangeboard.js       # terminal CLI (see "CLI" above)
 scripts/check-bundle-size.mjs  # CI bundle-size budget gate
-.github/workflows/ci.yml  # typecheck + test + build + bundle-size CI
+.github/workflows/ci.yml  # typecheck + test + build + bundle-size + Android compile CI
 ```
 
 ## Docs
@@ -171,7 +171,9 @@ Wrapped with [Capacitor](https://capacitorjs.com/) — the `android/app`
 folder is a generated native project (`npx cap add android` + `npx cap
 sync`), not hand-maintained; the web app in `src/` remains the canonical
 source. A built debug APK for sideloading lives in
-[`releases/`](releases/ExchangeBoard-v1.2.0-debug.apk).
+[`releases/`](releases/ExchangeBoard-v1.2.0-debug.apk). CI compiles both
+`:app` and `:wear` on every push (see `.github/workflows/ci.yml`) — check
+that job's status before treating a given commit as build-clean.
 
 Two hand-written (not Capacitor-generated) native additions, both doing
 their own independent rate fetch rather than reading the WebView's cache:

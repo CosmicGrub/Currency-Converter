@@ -85,7 +85,7 @@ src/
   App.test.tsx              # component smoke tests (Vitest + RTL)
 bin/exchangeboard.js       # standalone terminal CLI (see "CLI" below)
 scripts/check-bundle-size.mjs  # CI bundle-size budget gate
-.github/workflows/ci.yml  # typecheck + test + build + bundle-size CI
+.github/workflows/ci.yml  # typecheck + test + build + bundle-size + Android compile CI
 ```
 
 ## Data model
@@ -162,7 +162,7 @@ stale cache on network failure.
 - Type: JetBrains Mono for numerals/rates, Inter/system sans for labels
 - Signature element: exchange-board ticker tape + instant "flip" result reveal
 
-## Status (v1.5.0 — 2026-08-18)
+## Status (v1.5.1 — 2026-08-18)
 - ✅ Any-currency-to-any-currency conversion, instant, with swap —
   169-code ISO 4217 fiat catalog + 10 curated blue-chip cryptocurrencies
 - ✅ Device-tuned responsive layout: Galaxy Z Fold 5 (cover-screen +
@@ -194,7 +194,9 @@ stale cache on network failure.
   BNB) merged into the same USD-indexed `rates` table as fiat — CoinGecko,
   free/no-key, optional/non-blocking, own 1-day offline cache
 - ✅ Terminal CLI (`bin/exchangeboard.js`, `npx exchangeboard convert/rates`)
-- ✅ GitHub Actions CI: typecheck, tests, build, bundle-size budget gate
+- ✅ GitHub Actions CI: typecheck, tests, build, bundle-size budget gate,
+  and a real Android compile check (`:app:assembleDebug` +
+  `:wear:assembleDebug` on a GitHub-hosted runner) on every push
 - ✅ Automated tests (Vitest + RTL, 112 tests: conversion math incl.
   markup, formatters incl. locale overrides, storage/db fallback chain
   edge cases, crypto rate fetch/cache/fallback, currency-name data

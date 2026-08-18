@@ -43,6 +43,11 @@ JAVA_HOME="<path to a JDK 21>" ./gradlew assembleDebug
 # watch -> android/wear/build/outputs/apk/debug/wear-debug.apk
 ```
 
+CI now runs this same `assembleDebug` build (both modules) on every push
+via `.github/workflows/ci.yml`'s `android` job — a quicker way to check
+whether a given commit compiles clean than rebuilding locally, and its
+debug APKs are attached as a downloadable build artifact.
+
 Built/tested against:
 - App IDs: `com.cosmicgrub.exchangeboard` (phone), `com.cosmicgrub.exchangeboard.wear` (watch)
 - JDK 21 (Android Gradle Plugin in this Capacitor version requires it — a

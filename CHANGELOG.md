@@ -1,5 +1,44 @@
 # ExchangeBoard — Changelog
 
+## v1.5.1 — 2026-08-18
+
+Adds a real Android compile check to CI — closes the "unverified by a
+real compile" gap that every native Android doc in this project has
+carried since the Fold5/Tab/Watch6 branches were authored (no Android SDK,
+no network access to `dl.google.com`, in the sandbox all of that was
+written in).
+
+- New `android` job in `.github/workflows/ci.yml`, running alongside the
+  existing web `test`/`build` jobs: builds the web app, `npx cap sync
+  android`s it into the Capacitor shell, then runs
+  `./gradlew :app:assembleDebug` (phone/tablet — Fold5, Galaxy Tab, and
+  every other device, all one module now) and
+  `./gradlew :wear:assembleDebug` (Watch6 Classic, separate module) on a
+  GitHub-hosted runner — real Android SDK, full internet access, nothing
+  like this sandbox. Debug APKs upload as a build artifact.
+- JDK 21, not 17: Capacitor 8's generated `android/app/capacitor.build.gradle`
+  targets `JavaVersion.VERSION_21`, so the Gradle JVM has to be at least
+  that new (a JVM can compile down to an older bytecode target, never up
+  to a newer one) — confirmed against `releases/README.md`'s existing
+  device-install history, which already documented this same requirement
+  from an earlier real build.
+- Uses `android-actions/setup-android` to accept SDK licenses
+  non-interactively, so Gradle's on-demand download of compileSdk/
+  targetSdk 36 (`android/variables.gradle`) doesn't fail CI with an
+  unaccepted-license error even on a runner whose preinstalled SDK
+  doesn't already have it.
+- Fixed `android/gradlew`'s git file mode — it was checked in as
+  `100644` (not executable), so a fresh clone couldn't run `./gradlew`
+  directly on Linux/macOS without a manual `chmod +x` first, contradicting
+  `docs/BUILD_STEPS.md`'s own instructions. CI also `chmod +x`s it
+  defensively before invoking it, independent of the git fix.
+- Verification-status notes in `docs/BUILD_STEPS.md`, `docs/DEVICE_FOLD5.md`,
+  `docs/DEVICE_WATCH6_CLASSIC.md`, and `docs/DEVICE_TABLET.md` updated to
+  point at the new CI job — compile-time correctness is now continuously
+  checked; hardware/runtime behavior (flex mode, rotary feel, ambient
+  mode, complications) still needs a real device or matching emulator
+  profile, since a headless CI compile can't exercise any of that.
+
 ## v1.5.0 — 2026-08-18
 
 Three device-specific branches and a feature branch, combined into one

@@ -97,11 +97,29 @@ reason: **this was authored in a sandbox with no Android SDK and no
 network access to `dl.google.com`** (403 at the proxy — a sandbox egress
 policy, not a real outage). The Java is written carefully against a
 long-stable, well-documented API (`FoldingFeature` has been stable since
-Jetpack WindowManager 1.0), but it was not compiled, and the two dependency
-versions couldn't be checked against the current Maven index. Build via
-Android Studio (or `./gradlew assembleDebug`) and test flex mode on an
-actual Fold5 (or the Android Studio foldable emulator profile, which does
-simulate hinge-angle sensor events) before shipping.
+Jetpack WindowManager 1.0), but it was not compiled by hand there, and the
+two dependency versions couldn't be checked against the current Maven
+index at the time.
+
+**Update: the new CI job caught a real bug on its first run.** The
+`import androidx.window.layout.WindowInfoTrackerCallbackAdapter` line was
+wrong — that class ships in `androidx.window:window-java`, but under the
+`androidx.window.java.layout` package, not `androidx.window.layout`
+(where the core Kotlin-first `WindowInfoTracker`/`WindowLayoutInfo`/
+`FoldingFeature` classes live, from the plain `androidx.window:window`
+artifact). Three `cannot find symbol` errors, fixed by correcting the one
+import line. This is exactly the class of mistake the "unverified by a
+real compile" caveat always warned about — now caught automatically
+instead of surfacing on someone's first real Android Studio build.
+
+CI now closes the compile-time half of that gap: the `android` job in
+`.github/workflows/ci.yml` runs `:app:assembleDebug` (which includes this
+plugin and both `androidx.window` dependencies) on a GitHub-hosted
+runner with a real SDK and full internet access, on every push — check
+that job's status on the commit you care about. What CI still can't
+confirm is runtime behavior: test flex mode on an actual Fold5 (or the
+Android Studio foldable emulator profile, which does simulate hinge-angle
+sensor events) before shipping.
 
 ## v2: on-device "AI" — trend insight & currency quiz
 

@@ -39,7 +39,7 @@
             </intent-filter>
         </service>
 
-        <!-- Watch6 Classic branch: watch-face complication support -- lets
+        <!-- Watch6 Classic branch: watch-face complication support — lets
              a rate live directly on the watch face, not just the Tile. -->
         <service
             android:name=".RateComplicationService"
