@@ -5,12 +5,14 @@ target currency from a searchable dropdown (full name + ISO code, e.g. "Euro
 (EUR)"), and watch the converted amount update instantly — no "=" button,
 calculator-style live result.
 
-![status](https://img.shields.io/badge/status-v1.3.0-C9A227)
+![status](https://img.shields.io/badge/status-v1.3.1-C9A227)
 
 ## Features
 
-- Live conversion between **any two** of ~160 currencies (not just from
-  USD), instant on input, currency, or base change — swap sides with ⇅
+- Live conversion between **any two** of ~160 live-rate currencies (not
+  just from USD), instant on input, currency, or base change — swap sides
+  with ⇅; a 169-code ISO 4217 name catalog backs the picker so nearly
+  every currency the live API returns gets a real display name
 - Full name + ISO code shown for every currency, searchable dropdown on
   both sides, favorites (★) that float to the top and lead the quick-pick chips
 - 7D/30D/90D/1Y historical rate trend chart for the current pair

@@ -55,6 +55,16 @@ export const CURRENCY_NAMES: Record<string, string> = {
   XAG: "Silver Ounce", CUP: "Cuban Peso", CUC: "Cuban Convertible Peso",
   FKP: "Falkland Islands Pound", GIP: "Gibraltar Pound", SHP: "Saint Helena Pound",
   IMP: "Isle of Man Pound", JEP: "Jersey Pound", GGP: "Guernsey Pound",
+
+  // Rounding out full ISO 4217 coverage: currently-circulating codes that
+  // were missing above (recently introduced/redenominated currencies, plus
+  // the IMF/precious-metal codes some rate providers include alongside
+  // XAU/XAG). Additive only -- nothing above was changed or removed, so
+  // this can't affect any currency pair already in use.
+  BYN: "Belarusian Ruble", SSP: "South Sudanese Pound", SVC: "Salvadoran Colon",
+  SLE: "Sierra Leonean Leone", XCG: "Caribbean Guilder", VED: "Venezuelan Bolivar Digital",
+  ZWG: "Zimbabwe Gold", ZWL: "Zimbabwean Dollar",
+  XDR: "IMF Special Drawing Rights", XPD: "Palladium Ounce", XPT: "Platinum Ounce",
 };
 
 export const QUICK_PICKS = ["EUR", "GBP", "JPY", "CAD", "AUD", "INR", "CNY", "MXN"];

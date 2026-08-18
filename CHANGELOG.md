@@ -1,5 +1,28 @@
 # ExchangeBoard — Changelog
 
+## v1.3.1 — 2026-08-19
+
+Full ISO 4217 currency-name coverage pass.
+
+- `src/data/currencyNames.ts` grew from 158 to 169 entries, purely
+  additive (nothing existing changed or was removed). Added the
+  currently-circulating/recently-redenominated codes that were missing:
+  `BYN` (Belarusian Ruble), `SSP` (South Sudanese Pound), `SVC`
+  (Salvadoran Colon), `SLE` (Sierra Leonean Leone, the 2022
+  redenomination — `SLL` stays for compatibility with feeds still
+  using the old code), `XCG` (Caribbean Guilder, replacing `ANG` for
+  Curaçao/Sint Maarten — `ANG` stays for the same reason), `VED`
+  (Venezuelan Bolívar Digital), `ZWG`/`ZWL` (Zimbabwe Gold and the
+  legacy Zimbabwean Dollar), and the IMF/precious-metal codes some
+  rate providers return alongside `XAU`/`XAG`: `XDR`, `XPD`, `XPT`.
+- New `src/data/currencyNames.test.ts`: data-quality regression tests
+  (well-formed codes, no blank names, a 169+ count floor, presence of
+  the newly-added codes, every `QUICK_PICKS` entry has a name).
+- No changes to conversion logic, localStorage keys, or the live rate
+  API integration — this only expands the name lookup used for
+  display, so any currency the live API (or a future data source)
+  returns gets a real name instead of falling back to its bare code.
+
 ## Unreleased — Android widget + Wear OS companion (scaffolded 2026-08-10)
 
 Two staples of a "properly realized" currency app that the web-wrapped

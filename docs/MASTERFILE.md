@@ -2,7 +2,9 @@
 **Global any-currency-to-any-currency converter (React app)**
 
 ## Overview
-Live currency converter covering ~160 currencies. Any currency can be the
+Live currency converter covering the ~160 currencies the live rate API
+returns, backed by a 169-code ISO 4217 name catalog (`src/data/
+currencyNames.ts`) for full display-name coverage. Any currency can be the
 "from" (base) side, any currency can be the "to" (target) side — swap them
 with one tap. Full name + ISO code shown everywhere (e.g. "Euro (EUR)").
 Conversion updates instantly as the user types or changes either currency —

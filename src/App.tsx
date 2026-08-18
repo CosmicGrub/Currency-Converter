@@ -123,7 +123,8 @@ export default function App() {
             Global Currency Converter
           </h1>
           <p style={{ color: colors.textSecondary, fontSize: 14, marginTop: 6 }}>
-            Convert between any two of ~160 currencies, live.
+            Convert between any two of ~160 live currencies, from a
+            170-currency ISO 4217 catalog.
           </p>
         </div>
 

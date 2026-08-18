@@ -1,7 +1,7 @@
 {
   "name": "exchangeboard",
   "private": true,
-  "version": "1.3.0",
+  "version": "1.3.1",
   "type": "module",
   "description": "ExchangeBoard — a USD-based global currency converter with live, instant conversion.",
   "bin": {
