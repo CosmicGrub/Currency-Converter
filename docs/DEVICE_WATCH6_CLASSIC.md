@@ -37,9 +37,13 @@ app). All four requested enhancements are included:
   1 hour) for that to be worthwhile.
 - **Round-screen polish.** `activity_main.xml`'s root swapped from a
   plain `FrameLayout` to `androidx.wear.widget.BoxInsetLayout`
-  (`app:layout_box="all"`) — the standard Wear OS jetpack widget for
-  keeping content inside a circular display's safe area, rather than
-  hand-tuned padding.
+  (`app:layout_boxedEdges="all"` on its child) — the standard Wear OS
+  jetpack widget for keeping content inside a circular display's safe
+  area, rather than hand-tuned padding. (Originally written as
+  `layout_box`, the older pre-AndroidX support-library attribute name —
+  CI's first real resource-linking pass caught the mismatch with a
+  `attribute layout_box ... not found` error; fixed to the current
+  AndroidX name.)
 - **The Tile stays glanceable.** `RateTileService` still shows only 3
   rows (`.take(3)` off the now-longer `RateFetcher` list) — a Tile that
   needs scrolling would defeat the point of a Tile; the full 12-currency
