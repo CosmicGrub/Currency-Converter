@@ -18,7 +18,13 @@ data class RateSnapshot(val code: String, val rate: Double?)
 
 object RateFetcher {
     private const val RATES_URL = "https://open.er-api.com/v6/latest/USD"
-    private val QUICK_CODES = listOf("EUR", "GBP", "JPY")
+    // Watch6 Classic branch: widened from the original 3 (EUR/GBP/JPY) so
+    // the physical rotating bezel (see MainActivity's rotary handling) has
+    // a real list to scroll through instead of 3 rows that already fit on
+    // screen. Same single request either way -- the API returns the full
+    // rates table regardless of how many codes we keep from it.
+    private val QUICK_CODES =
+        listOf("EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "INR", "MXN", "BRL", "KRW", "SGD")
     private const val PREFS = "exchangeboard_wear"
 
     fun quickCodes(): List<String> = QUICK_CODES

@@ -10,7 +10,10 @@ android {
         minSdkVersion 30
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        // Watch6 Classic branch (device/galaxy-watch6-classic) -- rotary
+        // bezel input, ambient mode, and a watch-face complication added
+        // on top of the original Tile + companion activity.
+        versionName "1.0-watch6classic"
     }
 
     buildTypes {
@@ -35,4 +38,13 @@ dependencies {
     implementation 'androidx.wear.tiles:tiles:1.2.0'
     implementation 'com.google.android.gms:play-services-wearable:18.2.0'
     implementation 'com.google.guava:guava:33.2.1-android'
+
+    // Watch6 Classic branch additions -- ambient/always-on-display support
+    // and watch-face complications. Stable, long-established artifacts,
+    // but pin versions couldn't be double-checked against the current
+    // Google Maven index from the sandbox this was authored in
+    // (dl.google.com wasn't reachable there) -- verify the latest stable
+    // versions in Android Studio before building.
+    implementation 'androidx.wear:wear-ambient:1.0.1'
+    implementation 'androidx.wear.watchface:watchface-complications-data-source-ktx:1.2.1'
 }
