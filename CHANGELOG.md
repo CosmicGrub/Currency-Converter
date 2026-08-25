@@ -1,5 +1,57 @@
 # ExchangeBoard — Changelog
 
+## v1.6.2 — 2026-08-25
+
+Real-runtime verification for the native Android/Wear code, and a fixed
+stale doc line.
+
+- **New `instrumented-app` and `instrumented-wear` CI jobs**
+  (`.github/workflows/ci.yml`), via `reactivecircus/android-emulator-
+  runner` on GitHub's KVM-accelerated Linux runners. The existing
+  `android` job only proves `javac`/`kotlinc` accept the code — these
+  two go a real step further: they launch the actual `MainActivity` on a
+  real (emulated) Android/Wear OS runtime and confirm it reaches
+  `RESUMED` without crashing. This is what directly exercises
+  `FoldStatePlugin.load()` (the `WindowInfoTracker`/
+  `WindowInfoTrackerCallbackAdapter` wiring CI's compile check caught a
+  wrong import in earlier) and Wear `MainActivity`'s
+  `AmbientModeSupport.attach()` (the base-class fix from the same round)
+  outside of a bare compile check for the first time — compiling
+  successfully doesn't mean a class loads or a method doesn't throw at
+  runtime.
+- New `MainActivityLaunchTest` in both `android/app/src/androidTest/` and
+  `android/wear/src/androidTest/` — standard `ActivityScenario.launch()`
+  smoke tests, deliberately minimal to keep first-run risk low. Added
+  `androidx.test.ext:junit` to `android/wear/build.gradle` (it had no
+  test infrastructure at all before) and a `testInstrumentationRunner`
+  entry to match `:app`'s.
+- **Fixed a genuinely broken pre-existing test** while touching this:
+  `android/app/src/androidTest/.../ExampleInstrumentedTest.java` (a
+  Capacitor template placeholder) asserted the app's package name was
+  `"com.getcapacitor.app"` — never true for this app
+  (`com.cosmicgrub.exchangeboard`) — silently, because nothing had ever
+  actually run Android instrumented tests in CI before this.
+- **New `docs/DEVICE_VERIFICATION_CHECKLIST.md`** — a precise,
+  checkable list of what's now automatically verified (compiles → runs
+  without crashing → [not yet] confirmed on real hardware) vs. what
+  genuinely still needs a real Fold5, Galaxy Tab, or Watch6 Classic (or a
+  matching Android Studio emulator profile) — real hinge-angle-driven
+  flex-mode behavior, physical rotary bezel feel, actual always-on-
+  display appearance, and watch-face complication rendering, none of
+  which a standard headless CI emulator profile can reach. Linked from
+  `docs/DEVICE_FOLD5.md`, `docs/DEVICE_WATCH6_CLASSIC.md`,
+  `docs/BUILD_STEPS.md`, and the README.
+- **Fixed a stale line in `docs/MASTERFILE.md`**: its "Not yet built"
+  list still named "rate alert notifications," which actually shipped
+  back in v1.5.0 — noticed while answering "what's left or next" and
+  left unfixed at the time; fixed now.
+
+Emulator boot + instrumented test run adds a few minutes to CI per push,
+on two new parallel jobs (both depend on `android` passing first, so a
+compile failure short-circuits before either emulator boots). Everything
+else (typecheck, lint, 125 tests, build, bundle-size, Android compile)
+unchanged and still passing.
+
 ## v1.6.1 — 2026-08-25
 
 Fixes `npm run lint`, which had never actually worked — there was no

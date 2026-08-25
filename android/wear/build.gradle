@@ -14,6 +14,7 @@ android {
         // bezel input, ambient mode, and a watch-face complication added
         // on top of the original Tile + companion activity.
         versionName "1.0-watch6classic"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -48,4 +49,10 @@ dependencies {
     // build failed with "Could not find androidx.wear:wear-ambient:1.0.1"
     // -- a bad guess made without dl.google.com access in the sandbox
     // this branch was originally authored in.
+
+    // Same versions as android/app/build.gradle (rootProject.ext, see
+    // android/variables.gradle) -- for the instrumented-emulator smoke
+    // test in src/androidTest, see MainActivityLaunchTest.kt.
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
 }
