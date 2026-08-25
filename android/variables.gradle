@@ -12,5 +12,15 @@ ext {
     junitVersion = '4.13.2'
     androidxJunitVersion = '1.3.0'
     androidxEspressoCoreVersion = '3.7.0'
+    // Same androidx.test release train as androidxJunitVersion above
+    // (1.3.0 <-> runner 1.7.0, confirmed against the AndroidX Test
+    // release notes, not guessed) -- :app gets this transitively via
+    // androidx.test.espresso:espresso-core, which is what actually
+    // provides androidx.test.runner.AndroidJUnitRunner (the
+    // testInstrumentationRunner class), not androidx.test.ext:junit
+    // (that artifact only provides the AndroidJUnit4 *test* runner
+    // annotation, a different class). :wear has no espresso dependency,
+    // so it needs this declared directly -- see android/wear/build.gradle.
+    androidxTestRunnerVersion = '1.7.0'
     cordovaAndroidVersion = '14.0.1'
 }

@@ -55,4 +55,11 @@ dependencies {
     // test in src/androidTest, see MainActivityLaunchTest.kt.
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    // testInstrumentationRunner above (androidx.test.runner.AndroidJUnitRunner)
+    // lives in this artifact, not androidx.test.ext:junit -- CI's first
+    // real run here failed with ClassNotFoundException for exactly that
+    // class. :app never needed this declared explicitly because
+    // androidx.test.espresso:espresso-core (which :app depends on, :wear
+    // doesn't) pulls it in transitively.
+    androidTestImplementation "androidx.test:runner:$androidxTestRunnerVersion"
 }
