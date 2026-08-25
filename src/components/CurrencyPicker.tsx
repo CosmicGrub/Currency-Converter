@@ -148,7 +148,7 @@ export default function CurrencyPicker({
           <div style={{ overflowY: "auto", paddingBottom: 6 }}>
             {filtered.length === 0 && (
               <div style={{ padding: 14, color: colors.textSecondary, fontSize: 13 }}>
-                No currency matches "{search}".
+                No currency matches “{search}”.
               </div>
             )}
             {filtered.map((c) => (

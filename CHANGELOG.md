@@ -1,5 +1,62 @@
 # ExchangeBoard — Changelog
 
+## v1.6.1 — 2026-08-25
+
+Fixes `npm run lint`, which had never actually worked — there was no
+ESLint config file anywhere in the repo's history, so the script just
+failed outright with "ESLint couldn't find a configuration file."
+
+- New `.eslintrc.cjs` — `@typescript-eslint` (parser + `eslint-plugin`,
+  `^8.68.0`) plus `eslint-plugin-react`/`react-hooks`/`react-refresh`
+  (the versions already pinned in `package.json`). `npm run lint` also
+  needed `--ext .js,.jsx,.ts,.tsx,.mjs,.cjs` added — ESLint 8's default
+  `--ext` is `.js` only, so without it the script would have silently
+  skipped every `.ts`/`.tsx` file in `src/`.
+- **A real ecosystem gap, not just a config oversight**: `@typescript-eslint`
+  doesn't support this project's TypeScript 7 (the native/Go port) at
+  all — not an unbumped peer range, an actual runtime check that refuses
+  to load (confirmed against its canary release too, and against
+  typescript-eslint's own GitHub issue tracking TS 7 support, which says
+  real support needs "substantial design exploration and engineering
+  work" not yet done). The fix: `typescript-eslint-compat` (an npm alias
+  for `typescript@6.0.3`, the last classic-API release, satisfying
+  `@typescript-eslint`'s `<6.1.0` ceiling) installs alongside this
+  project's real `typescript@^7.0.2` with zero conflict, and a new
+  `postinstall` script (`scripts/link-eslint-typescript-compat.mjs`)
+  symlinks it into every `@typescript-eslint` package (+ `ts-api-utils`)
+  that does its own `require("typescript")` — `tsc`/`vite` everywhere
+  else in the project keep using TS 7, untouched. `npm run lint` also
+  re-runs this link step itself before linting (not just relying on
+  `postinstall` firing at the right time — verified empirically that an
+  incremental `npm install <pkg>` doesn't reliably preserve the symlinks
+  the way a full install does, so `lint` is self-healing regardless).
+- `npm install`/`npm ci` now require `--legacy-peer-deps` — npm's strict
+  peer resolver won't accept the TS 6-vs-7 split even with an explicit
+  `overrides` entry (verified empirically: `--force`,
+  `--install-strategy=nested`, and `$`-alias override references were
+  all tried and either hard-failed or silently re-deduped everything
+  onto the root's TS 7 copy). One real side effect caught by testing this
+  end-to-end rather than assuming it worked:
+  `--legacy-peer-deps` disables npm's newer auto-install-peers behavior,
+  which had been the *only* thing installing `@testing-library/dom` (a
+  peer, not a direct dependency, of `@testing-library/react`) — added it
+  as an explicit devDependency to fix that.
+- CI (`.github/workflows/ci.yml`): every `npm ci` step now passes
+  `--legacy-peer-deps`; the `test` job (renamed "Typecheck, Lint &
+  Vitest") now runs `npm run lint` too.
+- Two real, pre-existing lint findings fixed once linting actually ran
+  for the first time: an unescaped `"` in JSX text
+  (`CurrencyPicker.tsx`, `react/no-unescaped-entities` — replaced with
+  real curly quotes, matching this project's existing typographic
+  style) and a `react-refresh/only-export-components` warning
+  (`AmountPanel.tsx`, exporting a shared constant alongside its
+  component — left as the accepted warning it is, per the rule's own
+  documented allowance for exactly this pattern).
+
+125/125 tests passing, `tsc --noEmit` clean, `npm run lint` clean (0
+errors, 1 accepted warning), production build + bundle-size check pass
+(no bundle-size impact — every new package here is a devDependency).
+
 ## v1.6.0 — 2026-08-18
 
 Five engineering-hardening systems, all aimed at the same thing: closing

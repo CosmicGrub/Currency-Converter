@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   test:
-    name: Typecheck & Vitest
+    name: Typecheck, Lint & Vitest
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,11 +22,22 @@ jobs:
           node-version: 22
           cache: npm
 
+      # --legacy-peer-deps: typescript-eslint@8.68.0's declared peer range
+      # for `typescript` is ">=4.8.4 <6.1.0", which doesn't cover this
+      # project's TypeScript 7.x -- npm's strict (default) peer resolver
+      # refuses to install at all otherwise. See scripts/
+      # link-eslint-typescript-compat.mjs (a postinstall step, runs
+      # automatically below) for how ESLint tooling still gets a
+      # supported TypeScript version without touching the project's real
+      # TS 7 toolchain (tsc/vite, both run unaffected by any of this).
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Typecheck (tsc --noEmit)
         run: npm run typecheck
+
+      - name: Lint (eslint)
+        run: npm run lint
 
       - name: Run tests
         run: npm test
@@ -43,8 +54,16 @@ jobs:
           node-version: 22
           cache: npm
 
+      # --legacy-peer-deps: typescript-eslint@8.68.0's declared peer range
+      # for `typescript` is ">=4.8.4 <6.1.0", which doesn't cover this
+      # project's TypeScript 7.x -- npm's strict (default) peer resolver
+      # refuses to install at all otherwise. See scripts/
+      # link-eslint-typescript-compat.mjs (a postinstall step, runs
+      # automatically below) for how ESLint tooling still gets a
+      # supported TypeScript version without touching the project's real
+      # TS 7 toolchain (tsc/vite, both run unaffected by any of this).
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Build (vite build)
         run: npm run build
@@ -71,8 +90,16 @@ jobs:
           node-version: 22
           cache: npm
 
+      # --legacy-peer-deps: typescript-eslint@8.68.0's declared peer range
+      # for `typescript` is ">=4.8.4 <6.1.0", which doesn't cover this
+      # project's TypeScript 7.x -- npm's strict (default) peer resolver
+      # refuses to install at all otherwise. See scripts/
+      # link-eslint-typescript-compat.mjs (a postinstall step, runs
+      # automatically below) for how ESLint tooling still gets a
+      # supported TypeScript version without touching the project's real
+      # TS 7 toolchain (tsc/vite, both run unaffected by any of this).
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Build web app (dist/)
         run: npm run build
