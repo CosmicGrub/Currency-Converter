@@ -87,7 +87,9 @@ src/
   App.test.tsx              # component smoke tests (Vitest + RTL)
 bin/exchangeboard.js       # standalone terminal CLI (see "CLI" below)
 scripts/check-bundle-size.mjs  # CI bundle-size budget gate
-.github/workflows/ci.yml  # typecheck + test + build + bundle-size + Android compile CI
+scripts/link-eslint-typescript-compat.mjs  # postinstall: TS 6 compat for ESLint tooling only
+.eslintrc.cjs              # ESLint config — see its header comment for the TS 7 compat story
+.github/workflows/ci.yml  # typecheck + lint + test + build + bundle-size + Android compile CI
 ```
 
 ## Data model
@@ -164,7 +166,7 @@ stale cache on network failure.
 - Type: JetBrains Mono for numerals/rates, Inter/system sans for labels
 - Signature element: exchange-board ticker tape + instant "flip" result reveal
 
-## Status (v1.6.0 — 2026-08-18)
+## Status (v1.6.1 — 2026-08-25)
 - ✅ Any-currency-to-any-currency conversion, instant, with swap —
   169-code ISO 4217 fiat catalog + 10 curated blue-chip cryptocurrencies
 - ✅ Device-tuned responsive layout: Galaxy Z Fold 5 (cover-screen +
@@ -196,9 +198,14 @@ stale cache on network failure.
   BNB) merged into the same USD-indexed `rates` table as fiat — CoinGecko,
   free/no-key, optional/non-blocking, own 1-day offline cache
 - ✅ Terminal CLI (`bin/exchangeboard.js`, `npx exchangeboard convert/rates`)
-- ✅ GitHub Actions CI: typecheck, tests, build, bundle-size budget gate,
-  and a real Android compile check (`:app:assembleDebug` +
-  `:wear:assembleDebug` on a GitHub-hosted runner) on every push
+- ✅ GitHub Actions CI: typecheck, **lint**, tests, build, bundle-size
+  budget gate, and a real Android compile check (`:app:assembleDebug` +
+  `:wear:assembleDebug` on a GitHub-hosted runner) on every push. ESLint
+  (`.eslintrc.cjs`) previously had no config file at all and failed
+  outright — now configured and passing (1 accepted warning, 0 errors);
+  a `postinstall` step works around `@typescript-eslint` not yet
+  supporting this project's TypeScript 7 — see `.eslintrc.cjs`'s header
+  comment
 - ✅ Runtime API response validation (`zod`), a typed `DataSourceError`
   taxonomy, and IndexedDB schema versioning — every external response
   this app trusts is now shape-checked before use instead of blindly

@@ -5,7 +5,7 @@ target currency from a searchable dropdown (full name + ISO code, e.g. "Euro
 (EUR)"), and watch the converted amount update instantly — no "=" button,
 calculator-style live result.
 
-![status](https://img.shields.io/badge/status-v1.6.0-C9A227)
+![status](https://img.shields.io/badge/status-v1.6.1-C9A227)
 
 ## Features
 
@@ -83,19 +83,29 @@ calculator-style live result.
 ## Getting started
 
 ```bash
-npm install
+npm install --legacy-peer-deps
 npm run dev
 ```
 
 Then open the printed local URL. No API key or `.env` file needed.
 
+The `--legacy-peer-deps` flag is required, not optional: `@typescript-eslint`
+doesn't yet support this project's TypeScript 7 (its own runtime version
+check refuses to load against it at all — not just an unbumped peer range),
+so npm's strict peer resolver won't install otherwise. A `postinstall` step
+(`scripts/link-eslint-typescript-compat.mjs`) then gives ESLint tooling a
+separately-installed TypeScript 6.0.3 to use, without touching the actual
+`typescript@^7.0.2` this project builds with anywhere else — see the header
+comment in [`.eslintrc.cjs`](.eslintrc.cjs) for the full story.
+
 ```bash
 npm run typecheck   # tsc --noEmit
-npm run build       # typecheck + production build to dist/
-npm run preview     # preview the production build locally
-npm run size-check   # enforce the CI bundle-size budget against dist/
-npm test             # run the test suite once
-npm run test:watch    # watch mode
+npm run lint         # eslint
+npm run build         # typecheck + production build to dist/
+npm run preview        # preview the production build locally
+npm run size-check      # enforce the CI bundle-size budget against dist/
+npm test                 # run the test suite once
+npm run test:watch        # watch mode
 ```
 
 ## CLI
@@ -148,7 +158,9 @@ src/
   test/setup.ts               # Vitest + RTL setup
 bin/exchangeboard.js       # terminal CLI (see "CLI" above)
 scripts/check-bundle-size.mjs  # CI bundle-size budget gate
-.github/workflows/ci.yml  # typecheck + test + build + bundle-size + Android compile CI
+scripts/link-eslint-typescript-compat.mjs  # postinstall: TS 6 compat for ESLint tooling only
+.eslintrc.cjs              # ESLint config — see its header comment for the TS 7 compat story
+.github/workflows/ci.yml  # typecheck + lint + test + build + bundle-size + Android compile CI
 ```
 
 ## Docs
@@ -180,7 +192,9 @@ rate alerts + basket presets shipped in v1.5.0; a real Android compile
 check in CI shipped in v1.5.1; runtime API response validation, a typed
 error taxonomy, IndexedDB schema versioning, automated accessibility
 testing, and property-based testing for the core conversion math shipped
-in v1.6.0 (see `docs/ENGINEERING_HARDENING.md`). Open ideas: CSV export
+in v1.6.0 (see `docs/ENGINEERING_HARDENING.md`); a real, working ESLint
+config (it never had one before — `npm run lint` failed outright) shipped
+in v1.6.1. Open ideas: CSV export
 of the basket, app shortcuts, true background rate alerts via a native
 WorkManager job (see `docs/FEATURE_ALERTS_AND_PRESETS.md`), dependency
 vulnerability scanning and Lighthouse CI (scoped out of v1.6.0 as process
