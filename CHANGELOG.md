@@ -1,5 +1,42 @@
 # ExchangeBoard — Changelog
 
+## v1.6.0 — 2026-08-18
+
+Five engineering-hardening systems, all aimed at the same thing: closing
+gaps between "the code looks right" and "the code is actually verified
+correct" — see `docs/ENGINEERING_HARDENING.md` for the full rationale
+behind each.
+
+- **Runtime API response validation** (`src/lib/schemas.ts`, `zod`) —
+  every response from `open.er-api.com`/`api.frankfurter.dev`/
+  `api.coingecko.com` is now shape-checked before use, replacing a bare
+  `as ErApiResponse`-style cast that trusted three unversioned, best-effort
+  external services blindly.
+- **A typed `DataSourceError` taxonomy** (`src/lib/errors.ts`) —
+  `network`/`http`/`shape`/`empty`, replacing a mix of ad hoc string
+  `throw`s and silent `catch {}`s across `api.ts`/`crypto.ts`. `App.tsx`
+  now surfaces the specific `.userMessage` in `ResultPanel` instead of one
+  generic error string for every kind of failure.
+- **IndexedDB schema versioning** (`src/lib/db.ts`) — the `history_cache`
+  store now wipes itself when its stamped `SCHEMA_VERSION` doesn't match,
+  instead of risking an old-shaped cached record silently reading back as
+  if it still matched a reshaped future schema.
+- **Automated accessibility testing** (`jest-axe`) — registered globally
+  in `src/test/setup.ts`, run against the fully-composed app in
+  `App.test.tsx`; a real CI gate where there was previously no
+  accessibility tooling at all.
+- **Property-based testing** (`fast-check`) — `rateBetween`/
+  `convertAmount`/`applyMarkup` now also have invariant-based tests
+  (round-trip conversion, linear scaling, monotonic markup, never-NaN)
+  searching hundreds of generated cases per run, alongside the existing
+  example-based tests.
+
+125/125 tests passing (up from 112), `tsc --noEmit` clean, production
+build + bundle-size check pass. `zod` is a real runtime dependency (the
+other three additions are dev-only) and adds real weight — the main
+bundle went from ~62.8KB to ~82.9KB gzip, still well within the 300KB CI
+budget (~217KB to spare).
+
 ## v1.5.1 — 2026-08-18
 
 Adds a real Android compile check to CI — closes the "unverified by a

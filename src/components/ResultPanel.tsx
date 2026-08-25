@@ -11,6 +11,10 @@ export interface ResultPanelProps {
   converted: number | null;
   stale: boolean;
   asOf: string | null;
+  /** The specific reason behind an "error" status (see lib/errors.ts'
+   *  DataSourceError.userMessage) -- falls back to a generic message when
+   *  absent (an unexpected, non-DataSourceError throw). */
+  errorMessage?: string | null;
   onRetry: () => void;
   /** Fee/markup percentage already folded into `rate`/`converted` (see
    *  lib/convert.ts applyMarkup) -- 0 means the figures are the raw live rate. */
@@ -27,6 +31,7 @@ export default function ResultPanel({
   rate,
   converted,
   stale,
+  errorMessage,
   onRetry,
   markupPct = 0,
 }: ResultPanelProps) {
@@ -48,7 +53,7 @@ export default function ResultPanel({
       {status === "error" && (
         <div>
           <p style={{ color: colors.error, fontSize: 14, marginBottom: 10 }}>
-            Couldn't reach the rates service, and no cached rates are available.
+            {errorMessage ?? "Couldn't reach the rates service."} No cached rates are available.
           </p>
           <button
             onClick={onRetry}

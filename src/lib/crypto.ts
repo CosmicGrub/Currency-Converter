@@ -1,5 +1,8 @@
 import { loadJSON, saveJSON } from "./storage.js";
+import { coinGeckoPriceResponseSchema } from "./schemas.js";
+import { DataSourceError, toNetworkError } from "./errors.js";
 import type { RateTable } from "../types/index.js";
+import type { CoinGeckoPriceResponse } from "./schemas.js";
 
 // ---------------------------------------------------------------------------
 // Optional cryptocurrency layer, merged into the same USD-indexed `rates`
@@ -55,8 +58,6 @@ interface CryptoRatesCache {
   fetchedAt: string;
 }
 
-type CoinGeckoPriceResponse = Record<string, { usd?: number }>;
-
 /** Converts CoinGecko's { [coingeckoId]: { usd: price } } response into a
  *  `rates`-shaped fragment: { [code]: unitsOfCodePerUSD }. Pure/sync so
  *  it's trivially testable without mocking fetch. */
@@ -72,18 +73,45 @@ export function toRateTableFragment(priceData: CoinGeckoPriceResponse): RateTabl
 }
 
 /** Fetches live prices for every curated coin and returns a `rates`-shaped
- *  fragment ready to spread into the main USD-indexed table. Throws on
- *  network failure -- callers should prefer fetchCryptoRatesSafe() below
- *  unless they want to handle the fallback chain themselves. */
+ *  fragment ready to spread into the main USD-indexed table. Throws a
+ *  DataSourceError on network failure, a non-OK HTTP status, a malformed
+ *  or unexpected-shape response body, or a response that parses fine but
+ *  contains no usable price for any curated coin — callers should prefer
+ *  fetchCryptoRatesSafe() below unless they want to handle the fallback
+ *  chain themselves. */
 export async function fetchCryptoRates(): Promise<RateTable> {
   const ids = Object.values(CRYPTO_ASSETS)
     .map((a) => a.id)
     .join(",");
-  const res = await fetch(`${PRICE_ENDPOINT}?ids=${ids}&vs_currencies=usd`);
-  if (!res.ok) throw new Error(`CoinGecko responded ${res.status}`);
-  const data = (await res.json()) as CoinGeckoPriceResponse;
-  const rates = toRateTableFragment(data);
-  if (Object.keys(rates).length === 0) throw new Error("no usable crypto prices in response");
+
+  let res: Response;
+  try {
+    res = await fetch(`${PRICE_ENDPOINT}?ids=${ids}&vs_currencies=usd`);
+  } catch (cause) {
+    throw toNetworkError("crypto", cause);
+  }
+  if (!res.ok) throw new DataSourceError("http", "crypto", `crypto: CoinGecko responded ${res.status}`);
+
+  let raw: unknown;
+  try {
+    raw = await res.json();
+  } catch (cause) {
+    throw toNetworkError("crypto", cause);
+  }
+
+  const parsed = coinGeckoPriceResponseSchema.safeParse(raw);
+  if (!parsed.success) {
+    throw new DataSourceError(
+      "shape",
+      "crypto",
+      `crypto: unexpected response shape (${parsed.error.issues[0]?.message ?? "validation failed"})`
+    );
+  }
+
+  const rates = toRateTableFragment(parsed.data);
+  if (Object.keys(rates).length === 0) {
+    throw new DataSourceError("empty", "crypto", "crypto: no usable prices in response");
+  }
   saveJSON<CryptoRatesCache>(CACHE_KEY, { rates, fetchedAt: new Date().toISOString() });
   return rates;
 }

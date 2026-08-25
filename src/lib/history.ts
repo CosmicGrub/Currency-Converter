@@ -1,4 +1,5 @@
 import { dbGet, dbSet } from "./db.js";
+import { frankfurterResponseSchema } from "./schemas.js";
 import type { HistoryPoint } from "../types/index.js";
 
 // ---------------------------------------------------------------------------
@@ -14,6 +15,16 @@ import type { HistoryPoint } from "../types/index.js";
 // localStorage/memory fallback -- see ./db.ts) keyed by base/target/window,
 // so a later offline load can still render the last-known trend instead of
 // the "unavailable" placeholder.
+//
+// Unlike src/lib/api.ts and src/lib/crypto.ts, this deliberately never
+// throws — "no history for this pair/window" is a normal, expected outcome
+// from a data source that only covers ~30 currencies, not a failure. What
+// the schema validation below adds is protection against a *malformed*
+// response silently producing bad data instead of the same graceful
+// cache-or-empty fallback every other failure path here already takes:
+// before this, an unexpected shape (e.g. `rates[date]` not actually an
+// object) would have thrown a raw TypeError from inside the .map() below
+// instead of degrading like every other branch in this function does.
 // ---------------------------------------------------------------------------
 const HISTORY_ENDPOINT = "https://api.frankfurter.dev/v1";
 
@@ -27,10 +38,6 @@ function cacheKey(base: string, target: string, days: number): string {
   return `history:${base}:${target}:${days}d`;
 }
 
-interface FrankfurterResponse {
-  rates?: Record<string, Record<string, number>>;
-}
-
 export interface FetchHistoryOptions {
   days?: number;
   signal?: AbortSignal;
@@ -40,9 +47,10 @@ export interface FetchHistoryOptions {
  *  (default 30 days -- see the Timeframe type for the selectable presets).
  *  Returns an ordered array of { date, rate }. Falls back to the last
  *  cached series for the same pair/window if the network request fails,
- *  and returns [] only when neither a live nor a cached series exists --
- *  an expected, non-error outcome for pairs the historical source doesn't
- *  cover. */
+ *  the response body isn't valid JSON, or the parsed shape doesn't match
+ *  what this app expects — and returns [] only when neither a live nor a
+ *  cached series exists at all, an expected, non-error outcome for pairs
+ *  the historical source doesn't cover. */
 export async function fetchHistory(
   base: string,
   target: string,
@@ -62,9 +70,16 @@ export async function fetchHistory(
   }
   if (!res.ok) return dbGet<HistoryPoint[]>(key, []);
 
-  const data = (await res.json()) as FrankfurterResponse;
-  const rates = data?.rates;
-  if (!rates || typeof rates !== "object") return dbGet<HistoryPoint[]>(key, []);
+  let raw: unknown;
+  try {
+    raw = await res.json();
+  } catch {
+    return dbGet<HistoryPoint[]>(key, []);
+  }
+
+  const parsed = frankfurterResponseSchema.safeParse(raw);
+  const rates = parsed.success ? parsed.data.rates : undefined;
+  if (!rates) return dbGet<HistoryPoint[]>(key, []);
 
   const points = Object.keys(rates)
     .sort()

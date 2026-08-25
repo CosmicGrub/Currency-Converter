@@ -4,6 +4,7 @@ import { QUICK_PICKS } from "./data/currencyNames.js";
 import { fetchRates, getCachedRates } from "./lib/api.js";
 import { fetchCryptoRatesSafe } from "./lib/crypto.js";
 import { applyMarkup, convertAmount, rateBetween } from "./lib/convert.js";
+import { DataSourceError } from "./lib/errors.js";
 import { loadJSON, saveJSON } from "./lib/storage.js";
 import { genId } from "./lib/id.js";
 import { defaultPrefs, prefsReducer } from "./reducers/prefsReducer.js";
@@ -61,6 +62,10 @@ export default function App() {
   const [asOf, setAsOf] = useState<string | null>(null);
   const [stale, setStale] = useState(false); // true when showing a cached fallback table
   const [status, setStatus] = useState<Status>("loading");
+  // Only meaningful when status === "error" -- the specific, honest reason
+  // (network vs. shape vs. HTTP) behind the generic ResultPanel fallback
+  // text, from DataSourceError's userMessage (see lib/errors.ts).
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Merge stored prefs over defaultPrefs (not the reverse) so older saved
   // prefs blobs -- from before basketPresets/alerts existed -- get those
@@ -128,7 +133,16 @@ export default function App() {
       setAsOf(liveAsOf);
       setStale(false);
       setStatus("ready");
-    } catch {
+    } catch (err) {
+      // Kept for a future bug-report/diagnostics surface, not just thrown
+      // away -- DataSourceError's userMessage is honest but generic by
+      // design (see lib/errors.ts); .message/.cause carry the specific
+      // "what actually happened" detail if this is ever surfaced further.
+      if (err instanceof DataSourceError) {
+        setErrorMessage(err.userMessage);
+      } else if (!silent) {
+        setErrorMessage(null); // an unexpected (non-DataSourceError) throw -- fall back to ResultPanel's default text
+      }
       const cached = getCachedRates();
       if (cached) {
         const cryptoRates = await fetchCryptoRatesSafe();
@@ -290,6 +304,7 @@ export default function App() {
               converted={converted}
               stale={stale}
               asOf={asOf}
+              errorMessage={errorMessage}
               onRetry={loadRates}
               markupPct={markupPct}
             />
