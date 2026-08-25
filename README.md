@@ -161,7 +161,7 @@ bin/exchangeboard.js       # terminal CLI (see "CLI" above)
 scripts/check-bundle-size.mjs  # CI bundle-size budget gate
 scripts/link-eslint-typescript-compat.mjs  # postinstall: TS 6 compat for ESLint tooling only
 .eslintrc.cjs              # ESLint config — see its header comment for the TS 7 compat story
-.github/workflows/ci.yml  # typecheck + lint + test + build + bundle-size + Android compile CI
+.github/workflows/ci.yml  # typecheck + lint + test + build + bundle-size + Android compile + instrumented-emulator CI
 ```
 
 ## Docs
@@ -178,6 +178,7 @@ Google Drive folder.
 - [`docs/DEVICE_WATCH6_CLASSIC.md`](docs/DEVICE_WATCH6_CLASSIC.md) — Wear OS rotary input, ambient mode, complication
 - [`docs/FEATURE_ALERTS_AND_PRESETS.md`](docs/FEATURE_ALERTS_AND_PRESETS.md) — rate alerts + named basket presets
 - [`docs/BUILD_STEPS.md`](docs/BUILD_STEPS.md) — per-device build/install steps (Fold5, Tab, Watch6 Classic)
+- [`docs/DEVICE_VERIFICATION_CHECKLIST.md`](docs/DEVICE_VERIFICATION_CHECKLIST.md) — what CI verifies automatically vs. what still needs a real device
 - [`docs/ENGINEERING_HARDENING.md`](docs/ENGINEERING_HARDENING.md) — runtime validation, typed errors, schema versioning, a11y + property-based testing
 
 ## Roadmap
@@ -195,11 +196,14 @@ error taxonomy, IndexedDB schema versioning, automated accessibility
 testing, and property-based testing for the core conversion math shipped
 in v1.6.0 (see `docs/ENGINEERING_HARDENING.md`); a real, working ESLint
 config (it never had one before — `npm run lint` failed outright) shipped
-in v1.6.1. Open ideas: CSV export
-of the basket, app shortcuts, true background rate alerts via a native
-WorkManager job (see `docs/FEATURE_ALERTS_AND_PRESETS.md`), dependency
-vulnerability scanning and Lighthouse CI (scoped out of v1.6.0 as process
-tooling rather than correctness guarantees — see
+in v1.6.1; real-runtime instrumented emulator tests for both native
+modules (`instrumented-app`/`instrumented-wear` CI jobs) plus a precise
+checklist for what still needs real hardware
+(`docs/DEVICE_VERIFICATION_CHECKLIST.md`) shipped in v1.6.2. Open ideas:
+CSV export of the basket, app shortcuts, true background rate alerts via
+a native WorkManager job (see `docs/FEATURE_ALERTS_AND_PRESETS.md`),
+dependency vulnerability scanning and Lighthouse CI (scoped out of v1.6.0
+as process tooling rather than correctness guarantees — see
 `docs/ENGINEERING_HARDENING.md`).
 
 ## Android app
@@ -209,8 +213,13 @@ folder is a generated native project (`npx cap add android` + `npx cap
 sync`), not hand-maintained; the web app in `src/` remains the canonical
 source. A built debug APK for sideloading lives in
 [`releases/`](releases/ExchangeBoard-v1.2.0-debug.apk). CI compiles both
-`:app` and `:wear` on every push (see `.github/workflows/ci.yml`) — check
-that job's status before treating a given commit as build-clean.
+`:app` and `:wear` on every push, then launches each on a real (emulated)
+Android/Wear OS runtime to confirm it runs without crashing (see
+`.github/workflows/ci.yml`) — check those jobs' status before treating a
+given commit as verified. Real hardware-specific behavior (fold-hinge
+sensing, a physical rotary bezel, an actual always-on display) still
+needs a real device or a full Android Studio emulator session — see
+`docs/DEVICE_VERIFICATION_CHECKLIST.md`.
 
 Two hand-written (not Capacitor-generated) native additions, both doing
 their own independent rate fetch rather than reading the WebView's cache:

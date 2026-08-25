@@ -116,10 +116,16 @@ CI now closes the compile-time half of that gap: the `android` job in
 `.github/workflows/ci.yml` runs `:app:assembleDebug` (which includes this
 plugin and both `androidx.window` dependencies) on a GitHub-hosted
 runner with a real SDK and full internet access, on every push — check
-that job's status on the commit you care about. What CI still can't
-confirm is runtime behavior: test flex mode on an actual Fold5 (or the
-Android Studio foldable emulator profile, which does simulate hinge-angle
-sensor events) before shipping.
+that job's status on the commit you care about. As of v1.6.2, a second
+job (`instrumented-app`) goes one step further, on a real (emulated)
+Android runtime: it launches `MainActivity` and confirms `FoldStatePlugin.
+load()` — the `WindowInfoTracker`/`WindowInfoTrackerCallbackAdapter`
+wiring above — actually runs without throwing, not just compiles. What
+CI still can't confirm, because its emulator profile is a standard
+(non-foldable) one: real hinge-angle-driven flex-mode behavior. Test that
+on an actual Fold5 (or the Android Studio foldable emulator profile,
+which does simulate hinge-angle sensor events) — see
+`docs/DEVICE_VERIFICATION_CHECKLIST.md` for the precise checklist.
 
 ## v2: on-device "AI" — trend insight & currency quiz
 

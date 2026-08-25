@@ -99,12 +99,17 @@ policy — confirmed via a 403 at the proxy, not a real outage). That means:
   file and `activity_main.xml` (plus a wrong import package in the
   Fold5 hinge plugin — see `docs/DEVICE_FOLD5.md`). Check the job's
   status on the commit you care about.
-- **Runtime behavior still needs a real device or emulator** — CI proves
-  the code builds, not that the rotary input feels right in hand, that
-  ambient mode's redraw timing looks correct, or that the complication
-  actually renders on a watch face. Sideload to a Watch6 Classic (or the
-  Wear OS emulator with a round, bezel-equipped profile) to confirm that
-  part — nothing compiles that away.
+- **As of v1.6.2, a second CI job (`instrumented-wear`) goes one step
+  further**: it launches the companion `MainActivity` on a real (emulated)
+  Wear OS runtime and confirms `AmbientModeSupport.attach()` — the exact
+  fix in the point above — actually runs without throwing, not just
+  compiles. Still can't confirm: the rotary input feels right in hand,
+  ambient mode's redraw timing/palette looks correct on a real always-on
+  display, or the complication actually renders on a watch face — CI's
+  emulator has no physical bezel to turn and isn't sitting on a wrist.
+  Sideload to a Watch6 Classic (or the Wear OS emulator with a round,
+  bezel-equipped profile in Android Studio) to confirm that part — see
+  `docs/DEVICE_VERIFICATION_CHECKLIST.md` for the precise checklist.
 
 The rest of the repo (the web app, the other two device branches) went
 through `npm run typecheck` / `npm test` / `npm run build` — this branch's

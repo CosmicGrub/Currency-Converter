@@ -21,6 +21,13 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        assertEquals("com.getcapacitor.app", appContext.getPackageName());
+        // Was "com.getcapacitor.app" -- Capacitor's own template placeholder,
+        // never updated to this app's real applicationId
+        // (com.cosmicgrub.exchangeboard, see android/app/build.gradle). This
+        // test lived in the repo asserting a value that could never be true
+        // for this app, silently, because nothing had ever actually run
+        // Android instrumented tests in CI until now -- see MainActivityLaunchTest
+        // in this same source set for the real, actively-used smoke test.
+        assertEquals("com.cosmicgrub.exchangeboard", appContext.getPackageName());
     }
 }
