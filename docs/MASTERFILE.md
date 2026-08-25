@@ -167,7 +167,7 @@ stale cache on network failure.
 - Type: JetBrains Mono for numerals/rates, Inter/system sans for labels
 - Signature element: exchange-board ticker tape + instant "flip" result reveal
 
-## Status (v1.6.2 — 2026-08-25)
+## Status (v1.6.3 — 2026-08-25)
 - ✅ Any-currency-to-any-currency conversion, instant, with swap —
   169-code ISO 4217 fiat catalog + 10 curated blue-chip cryptocurrencies
 - ✅ Device-tuned responsive layout: Galaxy Z Fold 5 (cover-screen +
@@ -214,12 +214,13 @@ stale cache on network failure.
 - ✅ Automated accessibility testing (`jest-axe`) and property-based
   testing (`fast-check`, core conversion math) run as part of the normal
   test suite — see `docs/ENGINEERING_HARDENING.md`
-- ✅ Automated tests (Vitest + RTL, 125 tests: conversion math incl.
+- ✅ Automated tests (Vitest + RTL, 134 tests: conversion math incl.
   markup and property-based invariants, formatters incl. locale
   overrides, storage/db fallback chain + schema-versioning edge cases,
   crypto rate fetch/cache/fallback, currency-name data quality,
-  fold-state/forecast/quiz/alerts pure logic, Matrix/Insights/
-  CurrencyQuiz/Alerts components, App smoke tests + accessibility pass)
+  fold-state/forecast/quiz/alerts pure logic, CSV export edge cases,
+  Matrix/Insights/CurrencyQuiz/Alerts/Basket components, App smoke tests
+  + accessibility pass)
 - ✅ Real Vite + React project with git/GitHub, split into focused modules
 - ✅ Android app (Capacitor), merged to `main`, sideload-tested
 - ✅ Android home-screen widget — native `AppWidgetProvider`, own rate
@@ -229,6 +230,7 @@ stale cache on network failure.
   `docs/DEVICE_WATCH6_CLASSIC.md`
 - ✅ Wear OS companion — native Tile + activity, standalone `android/wear`
   module; see CHANGELOG "Unreleased" for detail
+- ✅ Basket CSV export (`src/lib/csv.ts`) — see CHANGELOG v1.6.2
 - ✅ Real-runtime instrumented tests for both native modules
   (`instrumented-app`/`instrumented-wear` CI jobs, via `reactivecircus/
   android-emulator-runner`) — launches `MainActivity` on a real (emulated)
@@ -238,9 +240,9 @@ stale cache on network failure.
   physical rotary feel, actual always-on-display look) is now precisely
   tracked in `docs/DEVICE_VERIFICATION_CHECKLIST.md` rather than left
   implicit
-- ⬜ Not yet built: CSV export, app shortcuts, Quick Settings tile, true
-  background rate alerts via a native WorkManager job (foreground/open-app
-  alerts shipped in v1.5.0 — see `docs/FEATURE_ALERTS_AND_PRESETS.md`)
+- ⬜ Not yet built: app shortcuts, Quick Settings tile, true background
+  rate alerts via a native WorkManager job (foreground/open-app alerts
+  shipped in v1.5.0 — see `docs/FEATURE_ALERTS_AND_PRESETS.md`)
 
 ## Standing rules for this project
 - Canonical docs: this masterfile + CHANGELOG.md + docs/VISUAL.html —

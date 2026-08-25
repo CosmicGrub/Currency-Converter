@@ -30,6 +30,7 @@ calculator-style live result.
   `docs/FEATURE_ALERTS_AND_PRESETS.md`)
 - N x N comparative exchange matrix over your favorites
 - Named basket presets — save/load/delete whole basket snapshots
+- Export the basket to CSV
 - Responsive layout tuned per device: Galaxy Z Fold 5 (cover-screen +
   unfolded two-column + real hinge-hardware-driven flex mode on an
   actual foldable), Galaxy Tab (extra-wide breakpoint for large

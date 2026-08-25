@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { colors, fonts } from "../styles/tokens.js";
 import { CURRENCY_NAMES } from "../data/currencyNames.js";
 import { applyMarkup, convertAmount } from "../lib/convert.js";
-import { fmt } from "../lib/format.js";
+import { fmt, rawNum } from "../lib/format.js";
+import { downloadCSV, toCSV } from "../lib/csv.js";
 import type { BasketPreset, RateTable } from "../types/index.js";
 
 export interface BasketProps {
@@ -52,6 +53,24 @@ export default function Basket({
 
   const numericAmount = parseFloat(amount);
 
+  const handleExportCSV = () => {
+    const rows = codes.map((c) => {
+      const rawConverted = rates ? convertAmount(numericAmount, rates, base, c) : null;
+      const converted = rawConverted !== null ? applyMarkup(rawConverted, markupPct) : null;
+      return {
+        code: c,
+        name: CURRENCY_NAMES[c] || "",
+        amount: numericAmount,
+        base,
+        converted: converted !== null ? rawNum(converted) : "",
+        markupPct,
+      };
+    });
+    const csv = toCSV(rows, ["code", "name", "amount", "base", "converted", "markupPct"]);
+    const stamp = new Date().toISOString().slice(0, 10);
+    downloadCSV(`exchangeboard-basket-${stamp}.csv`, csv);
+  };
+
   const options = useMemo(() => {
     if (!rates) return [];
     const q = search.trim().toLowerCase();
@@ -84,6 +103,23 @@ export default function Basket({
           BASKET
         </label>
         <div style={{ display: "flex", gap: 6 }}>
+          {codes.length > 0 && (
+            <button
+              onClick={handleExportCSV}
+              style={{
+                background: "transparent",
+                border: `1px solid ${colors.borderAlt}`,
+                borderRadius: 999,
+                padding: "4px 10px",
+                color: colors.textSecondary,
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Export CSV
+            </button>
+          )}
           {onSavePreset && codes.length > 0 && (
             <button
               onClick={() => setNamingPreset((n) => !n)}
