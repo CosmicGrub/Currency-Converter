@@ -1,5 +1,31 @@
 # ExchangeBoard — Changelog
 
+## v1.6.2 — 2026-08-25
+
+Basket CSV export — the last purely-additive, zero-native-footprint item
+off the standing roadmap.
+
+- New `src/lib/csv.ts`: dependency-free RFC 4180 CSV writer (`toCSV`) and
+  a Blob-based browser download trigger (`downloadCSV`), split apart so
+  the escaping logic (commas/quotes/newlines) is unit-testable without
+  needing a real DOM download.
+- New "Export CSV" button in the basket panel (visible once it's
+  non-empty) — exports `code,name,amount,base,converted,markupPct` for
+  every basket entry, filename dated `exchangeboard-basket-YYYY-MM-DD.csv`.
+  Reuses data the panel already has (`rates`/`base`/`amount`/`codes`/
+  `markupPct`) — no new props, no `App.tsx` changes.
+- 9 new tests (CSV escaping edge cases + a Basket integration test that
+  mocks `URL.createObjectURL`/anchor `click()` to verify the actual
+  download is triggered, not just that a handler exists). Also
+  live-verified in a running dev server: real basket data through the
+  UI down to the exact downloaded CSV bytes.
+- Deliberately scoped to just the basket for now — a history/timeframe
+  export would be a reasonable follow-on but wasn't asked for.
+
+134/134 tests passing (up from 125), `tsc --noEmit` clean, `npm run
+lint` clean (same 1 pre-existing accepted warning), bundle size 83.33KB
+gzip (+0.02KB — the new module is tiny and tree-shakes tightly).
+
 ## v1.6.1 — 2026-08-25
 
 Fixes `npm run lint`, which had never actually worked — there was no

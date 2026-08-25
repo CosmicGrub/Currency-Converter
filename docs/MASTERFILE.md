@@ -228,8 +228,11 @@ stale cache on network failure.
   `docs/DEVICE_WATCH6_CLASSIC.md`
 - ✅ Wear OS companion — native Tile + activity, standalone `android/wear`
   module; see CHANGELOG "Unreleased" for detail
-- ⬜ Not yet built: rate alert notifications, CSV export, app shortcuts,
-  Quick Settings tile
+- ✅ Basket CSV export (`src/lib/csv.ts`) — see CHANGELOG v1.6.2
+- ⬜ Not yet built: background/push rate alert notifications (current
+  alerts are foreground/open-app scope only — real push needs a backend
+  or serverless trigger, a bigger architectural step than the rest of
+  this list), app shortcuts, Quick Settings tile
 
 ## Standing rules for this project
 - Canonical docs: this masterfile + CHANGELOG.md + docs/VISUAL.html —

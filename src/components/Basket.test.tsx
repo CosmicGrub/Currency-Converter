@@ -54,3 +54,32 @@ describe("Basket presets", () => {
     expect(onDeletePreset).toHaveBeenCalledWith("p1");
   });
 });
+
+describe("Basket CSV export", () => {
+  it("hides the Export CSV button when the basket is empty", () => {
+    render(<Basket {...baseProps({ codes: [] })} />);
+    expect(screen.queryByText("Export CSV")).not.toBeInTheDocument();
+  });
+
+  it("triggers a CSV download with a dated filename when clicked", () => {
+    // jsdom doesn't implement createObjectURL/revokeObjectURL -- stub them
+    // so downloadCSV's real Blob-download path runs instead of no-oping.
+    const createObjectURL = vi.fn((_blob: Blob) => "blob:mock-url");
+    const revokeObjectURL = vi.fn();
+    vi.stubGlobal("URL", { ...URL, createObjectURL, revokeObjectURL });
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+
+    render(<Basket {...baseProps({ codes: ["EUR", "GBP"] })} />);
+    fireEvent.click(screen.getByText("Export CSV"));
+
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:mock-url");
+
+    const blob = createObjectURL.mock.calls[0][0];
+    expect(blob.type).toBe("text/csv;charset=utf-8;");
+
+    clickSpy.mockRestore();
+    vi.unstubAllGlobals();
+  });
+});
