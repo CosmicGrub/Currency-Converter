@@ -272,14 +272,20 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      # api-level 30 matches :wear's own minSdkVersion (Wear OS 3+); the
-      # android-wear target is this action's documented Wear OS system
-      # image tag (distinct from android-tv/google-tv/automotive, its
-      # other non-phone targets).
+      # api-level 33, not :wear's own minSdkVersion 30 -- CI's first real
+      # run here failed with "Failed to find package 'system-images;
+      # android-30;android-wear;x86_64'": that exact image doesn't exist
+      # in the SDK repository (not every API level ships every target).
+      # 33 ("Wear OS 4 Intel x86_64 Atom System Image") does, confirmed
+      # against Google's own SDK package listing, not guessed a second
+      # time -- still well above minSdkVersion 30, so nothing about the
+      # module itself needs to change to run on it. android-wear is this
+      # action's documented Wear OS system image tag (distinct from
+      # android-tv/google-tv/automotive, its other non-phone targets).
       - name: Run instrumented tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 30
+          api-level: 33
           target: android-wear
           arch: x86_64
           script: cd android && ./gradlew :wear:connectedDebugAndroidTest --stacktrace
