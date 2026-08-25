@@ -1,6 +1,15 @@
 import "@testing-library/jest-dom/vitest";
-import { afterEach } from "vitest";
+import { afterEach, expect } from "vitest";
 import { cleanup } from "@testing-library/react";
+import { toHaveNoViolations } from "jest-axe";
+
+// Registers the `toHaveNoViolations()` matcher (from jest-axe, which despite
+// the name has no runtime dependency on the Jest test runner itself -- just
+// axe-core plus a Jest-API-compatible custom matcher, and Vitest's `expect`
+// is that same API) globally, the same way `@testing-library/jest-dom/vitest`
+// above already registers `.toBeInTheDocument()` etc. -- see component *.test.tsx
+// files for `axe(container)` usage.
+expect.extend(toHaveNoViolations);
 
 // @testing-library/react normally auto-registers `afterEach(cleanup)` on
 // import, but only if it finds a global `afterEach` -- this project runs

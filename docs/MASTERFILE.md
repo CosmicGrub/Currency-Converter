@@ -65,8 +65,10 @@ src/
     api.ts                   # fetchRates() + getCachedRates() — fiat, open.er-api.com (offline fallback cache)
     crypto.ts                 # CRYPTO_ASSETS (curated 10) + fetchCryptoRatesSafe() — coingecko.com, merges into `rates`
     convert.ts                  # rateBetween()/convertAmount()/applyMarkup() — base-agnostic math
-    db.ts                        # IndexedDB -> localStorage -> memory fallback chain (history_cache store)
-    history.ts                    # fetchHistory() — frankfurter.dev time series, cached via db.ts
+    schemas.ts                    # zod schemas — validates every external API response's real shape
+    errors.ts                      # DataSourceError — typed network/http/shape/empty error taxonomy
+    db.ts                            # IndexedDB -> localStorage -> memory fallback chain, schema-versioned
+    history.ts                        # fetchHistory() — frankfurter.dev time series, cached via db.ts
     format.ts                      # fmt(), rawNum(), getLocale() — locale-aware Intl.NumberFormat
     storage.ts                      # namespaced localStorage helpers (never throws)
   styles/tokens.ts          # design tokens (palette, fonts)
@@ -162,7 +164,7 @@ stale cache on network failure.
 - Type: JetBrains Mono for numerals/rates, Inter/system sans for labels
 - Signature element: exchange-board ticker tape + instant "flip" result reveal
 
-## Status (v1.5.1 — 2026-08-18)
+## Status (v1.6.0 — 2026-08-18)
 - ✅ Any-currency-to-any-currency conversion, instant, with swap —
   169-code ISO 4217 fiat catalog + 10 curated blue-chip cryptocurrencies
 - ✅ Device-tuned responsive layout: Galaxy Z Fold 5 (cover-screen +
@@ -197,11 +199,19 @@ stale cache on network failure.
 - ✅ GitHub Actions CI: typecheck, tests, build, bundle-size budget gate,
   and a real Android compile check (`:app:assembleDebug` +
   `:wear:assembleDebug` on a GitHub-hosted runner) on every push
-- ✅ Automated tests (Vitest + RTL, 112 tests: conversion math incl.
-  markup, formatters incl. locale overrides, storage/db fallback chain
-  edge cases, crypto rate fetch/cache/fallback, currency-name data
-  quality, fold-state/forecast/quiz/alerts pure logic, Matrix/Insights/
-  CurrencyQuiz/Alerts components, App smoke tests)
+- ✅ Runtime API response validation (`zod`), a typed `DataSourceError`
+  taxonomy, and IndexedDB schema versioning — every external response
+  this app trusts is now shape-checked before use instead of blindly
+  cast; see `docs/ENGINEERING_HARDENING.md`
+- ✅ Automated accessibility testing (`jest-axe`) and property-based
+  testing (`fast-check`, core conversion math) run as part of the normal
+  test suite — see `docs/ENGINEERING_HARDENING.md`
+- ✅ Automated tests (Vitest + RTL, 125 tests: conversion math incl.
+  markup and property-based invariants, formatters incl. locale
+  overrides, storage/db fallback chain + schema-versioning edge cases,
+  crypto rate fetch/cache/fallback, currency-name data quality,
+  fold-state/forecast/quiz/alerts pure logic, Matrix/Insights/
+  CurrencyQuiz/Alerts components, App smoke tests + accessibility pass)
 - ✅ Real Vite + React project with git/GitHub, split into focused modules
 - ✅ Android app (Capacitor), merged to `main`, sideload-tested
 - ✅ Android home-screen widget — native `AppWidgetProvider`, own rate

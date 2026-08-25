@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Mock } from "vitest";
+import { axe } from "jest-axe";
 import App from "./App.js";
 
 const mockRatesResponse = {
@@ -46,8 +47,36 @@ describe("App", () => {
 
     await waitFor(() =>
       expect(
-        screen.getByText("Couldn't reach the rates service, and no cached rates are available.")
+        screen.getByText("Couldn't reach the rates service. No cached rates are available.")
       ).toBeInTheDocument()
     );
   });
+
+  it("shows the specific reason for a malformed (unexpected-shape) rates response", async () => {
+    (fetch as unknown as Mock).mockImplementation(() =>
+      Promise.resolve({ json: () => Promise.resolve({ result: "success" /* missing rates entirely */ }) })
+    );
+
+    render(<App />);
+
+    await waitFor(() =>
+      expect(
+        screen.getByText("The rates service sent back data in an unexpected format. No cached rates are available.")
+      ).toBeInTheDocument()
+    );
+  });
+
+  // A single pass over the fully-composed, "ready"-state app -- Ticker,
+  // AmountPanel, CurrencySelect, ResultPanel, HistoryChart, Basket, Matrix,
+  // Insights, CurrencyQuiz, Alerts, and OfflineBanner all render together
+  // once rates load (see App.tsx), so this one axe run covers the large
+  // majority of the app's real interactive markup in a single pass rather
+  // than needing a duplicate per-component a11y test everywhere.
+  it("has no detectable accessibility violations once rates are loaded", async () => {
+    const { container } = render(<App />);
+    await waitFor(() => expect(screen.getByText(/USD EQUALS/)).toBeInTheDocument());
+
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  }, 20000);
 });

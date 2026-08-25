@@ -1,4 +1,6 @@
 import { loadJSON, saveJSON } from "./storage.js";
+import { erApiResponseSchema } from "./schemas.js";
+import { DataSourceError, toNetworkError } from "./errors.js";
 import type { RatesCache } from "../types/index.js";
 
 // ---------------------------------------------------------------------------
@@ -13,20 +15,43 @@ import type { RatesCache } from "../types/index.js";
 const RATES_ENDPOINT = "https://open.er-api.com/v6/latest/USD";
 const CACHE_KEY = "ratesCache";
 
-interface ErApiResponse {
-  result: string;
-  base_code: string;
-  time_last_update_utc: string;
-  rates: Record<string, number>;
-}
-
 /** Fetches the latest USD-based rate table.
- *  Returns { rates, asOf }. Throws on network failure or a non-success API response. */
+ *  Returns { rates, asOf }. Throws a DataSourceError on network failure, a
+ *  malformed response body, an unexpected response shape, or an explicit
+ *  API-reported failure — see src/lib/errors.ts for what each kind means
+ *  and why they're distinguished. */
 export async function fetchRates(): Promise<RatesCache> {
-  const res = await fetch(RATES_ENDPOINT);
-  const data = (await res.json()) as ErApiResponse;
-  if (data.result !== "success") throw new Error("bad response");
-  const result: RatesCache = { rates: data.rates, asOf: data.time_last_update_utc };
+  let res: Response;
+  try {
+    res = await fetch(RATES_ENDPOINT);
+  } catch (cause) {
+    throw toNetworkError("rates", cause);
+  }
+
+  let raw: unknown;
+  try {
+    raw = await res.json();
+  } catch (cause) {
+    // A response that isn't valid JSON at all is functionally identical to
+    // a network failure from every caller's perspective (both mean "fall
+    // back to the offline cache"), so it's bucketed the same way rather
+    // than getting its own kind.
+    throw toNetworkError("rates", cause);
+  }
+
+  const parsed = erApiResponseSchema.safeParse(raw);
+  if (!parsed.success) {
+    throw new DataSourceError(
+      "shape",
+      "rates",
+      `rates: unexpected response shape (${parsed.error.issues[0]?.message ?? "validation failed"})`
+    );
+  }
+  if (parsed.data.result !== "success") {
+    throw new DataSourceError("http", "rates", `rates: API reported failure (result="${parsed.data.result}")`);
+  }
+
+  const result: RatesCache = { rates: parsed.data.rates, asOf: parsed.data.time_last_update_utc };
   saveJSON(CACHE_KEY, result);
   return result;
 }

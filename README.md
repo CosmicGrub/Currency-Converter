@@ -5,7 +5,7 @@ target currency from a searchable dropdown (full name + ISO code, e.g. "Euro
 (EUR)"), and watch the converted amount update instantly — no "=" button,
 calculator-style live result.
 
-![status](https://img.shields.io/badge/status-v1.5.1-C9A227)
+![status](https://img.shields.io/badge/status-v1.6.0-C9A227)
 
 ## Features
 
@@ -67,6 +67,18 @@ calculator-style live result.
   keystroke or per base/target change
 - `localStorage` (+ IndexedDB for history) for favorites, last-used
   base/target/basket, and the offline rate/history caches
+- [`zod`](https://zod.dev/) validates every external API response's actual
+  shape at runtime before any of it is trusted, instead of a bare
+  TypeScript `as` cast — see `docs/ENGINEERING_HARDENING.md`
+- A typed `DataSourceError` taxonomy (`network`/`http`/`shape`/`empty`)
+  distinguishes *why* a fetch failed, so the UI can say something more
+  honest than a generic "something went wrong" (`src/lib/errors.ts`)
+- The IndexedDB history cache is schema-versioned (`src/lib/db.ts`) — a
+  future change to what's stored there wipes stale-shaped records instead
+  of silently reading them back as if they still matched
+- Automated accessibility testing (`jest-axe`) and property-based testing
+  (`fast-check`, for the core conversion math) run as part of the normal
+  test suite — see `docs/ENGINEERING_HARDENING.md`
 
 ## Getting started
 
@@ -113,10 +125,12 @@ src/
     api.ts                   # fetchRates() + getCachedRates() — open.er-api.com + offline cache
     crypto.ts                 # CRYPTO_ASSETS (curated 10) + fetchCryptoRatesSafe() — coingecko.com
     convert.ts                  # rateBetween()/convertAmount()/applyMarkup() — base-agnostic conversion math
-    db.ts                        # IndexedDB -> localStorage -> memory fallback chain (history_cache store)
-    history.ts                    # fetchHistory() — frankfurter.dev time series, cached via db.ts
-    format.ts                      # fmt(), rawNum(), getLocale() — locale-aware Intl.NumberFormat
-    storage.ts                      # namespaced localStorage helpers
+    schemas.ts                    # zod schemas validating every external API response's real shape
+    errors.ts                      # DataSourceError — typed network/http/shape/empty error taxonomy
+    db.ts                            # IndexedDB -> localStorage -> memory fallback chain, schema-versioned
+    history.ts                        # fetchHistory() — frankfurter.dev time series, cached via db.ts
+    format.ts                          # fmt(), rawNum(), getLocale() — locale-aware Intl.NumberFormat
+    storage.ts                          # namespaced localStorage helpers
   styles/tokens.ts          # design tokens (palette, fonts)
   components/
     Ticker.tsx               # scrolling rate ticker strip (base-aware)
@@ -151,6 +165,7 @@ Google Drive folder.
 - [`docs/DEVICE_WATCH6_CLASSIC.md`](docs/DEVICE_WATCH6_CLASSIC.md) — Wear OS rotary input, ambient mode, complication
 - [`docs/FEATURE_ALERTS_AND_PRESETS.md`](docs/FEATURE_ALERTS_AND_PRESETS.md) — rate alerts + named basket presets
 - [`docs/BUILD_STEPS.md`](docs/BUILD_STEPS.md) — per-device build/install steps (Fold5, Tab, Watch6 Classic)
+- [`docs/ENGINEERING_HARDENING.md`](docs/ENGINEERING_HARDENING.md) — runtime validation, typed errors, schema versioning, a11y + property-based testing
 
 ## Roadmap
 
@@ -161,9 +176,16 @@ calculator, favorites matrix, and CLI/CI tooling shipped in v1.3.0; full
 ISO 4217 currency-name coverage and curated blue-chip crypto shipped in
 v1.3.1/v1.4.0; device-tuned layouts (Fold5 hinge-hardware flex mode +
 on-device AI, Galaxy Tab, Watch6 Classic rotary/ambient/complication) and
-rate alerts + basket presets shipped in v1.5.0. Open ideas: CSV export of
-the basket, app shortcuts, true background rate alerts via a native
-WorkManager job (see `docs/FEATURE_ALERTS_AND_PRESETS.md`).
+rate alerts + basket presets shipped in v1.5.0; a real Android compile
+check in CI shipped in v1.5.1; runtime API response validation, a typed
+error taxonomy, IndexedDB schema versioning, automated accessibility
+testing, and property-based testing for the core conversion math shipped
+in v1.6.0 (see `docs/ENGINEERING_HARDENING.md`). Open ideas: CSV export
+of the basket, app shortcuts, true background rate alerts via a native
+WorkManager job (see `docs/FEATURE_ALERTS_AND_PRESETS.md`), dependency
+vulnerability scanning and Lighthouse CI (scoped out of v1.6.0 as process
+tooling rather than correctness guarantees — see
+`docs/ENGINEERING_HARDENING.md`).
 
 ## Android app
 
