@@ -60,32 +60,47 @@ bonus channel.
   `loadRates({ silent: true })` **only while at least one alert is
   enabled** — no extra API polling for users not using alerts.
 
-### ⚠️ Scope: foreground/open-app alerts, not background push
+### Scope: foreground/open-app on web/PWA/iOS; true background on Android
 
-This is a deliberate, honest scope choice, not an oversight. The project
-has **no backend** (see `docs/MASTERFILE.md` — "no backend, no DB
-required"), and true background alerts when the browser/app is fully
-closed would need either a server-side push trigger or a native
-background job:
+The foreground behavior below was the original (v1.5.0) scope, and is
+still the *entire* story on plain web/PWA and iOS — the project has **no
+backend** (see `docs/MASTERFILE.md` — "no backend, no DB required"), and
+without one, background alerts on those platforms would need either a
+server-side push trigger or Web Periodic Background Sync, which has no
+iOS Safari support at all and OS-throttled intervals too coarse to be a
+real "rate alert." Neither was in scope for this pass.
 
-- **What this branch does:** re-checks alert thresholds every 5 minutes
-  while the app is open (foreground or a backgrounded-but-still-alive
-  browser tab), and fires an in-app status update plus an optional
-  browser `Notification`.
-- **What it does *not* do:** wake up and notify you if the app/browser is
-  fully closed. Web Periodic Background Sync exists but has narrow
-  browser support (no iOS Safari at all) and OS-throttled intervals too
-  coarse to be a real "rate alert."
-- **A real background-capable option exists as a natural follow-up, not
-  built here:** the Android shell (`android/app`) already has two
-  precedents for independent native background fetches outside the
-  WebView — the home-screen widget and the Wear OS companion (see
-  `CHANGELOG.md`). A native `WorkManager` job doing the same threshold
-  check + a system notification would give Android users real background
-  alerts without needing a backend, matching that existing pattern. It
-  wasn't built in this pass because it's native Kotlin work of similar
-  size to the Watch6 Classic branch — flagging it explicitly rather than
-  building it unasked, the same reasoning applied there.
+- **Foreground/open-app (all platforms):** `Alerts.tsx` re-checks alert
+  thresholds every 5 minutes while the app is open (foreground or a
+  backgrounded-but-still-alive browser tab), and fires an in-app status
+  update plus an optional browser `Notification`.
+- **True background (Android only, added later):** the Android shell
+  (`android/app`) already had two precedents for independent native
+  background fetches outside the WebView — the home-screen widget and
+  the Wear OS companion (see `CHANGELOG.md`) — so a native `WorkManager`
+  job doing the same threshold check + a system notification followed
+  that same pattern:
+  - `RateAlertsScheduler`/`RateAlertsWorker` (`android/app/src/main/java/
+    .../`) — a periodic job (WorkManager's own enforced 15-minute
+    minimum interval, `NetworkType.CONNECTED` constraint) that
+    independently fetches `open.er-api.com`, re-implements the same
+    USD-indexed rate math and armed→triggered hysteresis rule as
+    `lib/alerts.ts` (no code-sharing path exists between a WorkManager
+    Worker and a WebView's JS bundle), and posts a system notification
+    on a fresh crossing.
+  - `BackgroundAlertsPlugin` (Capacitor plugin) bridges the JS-owned
+    alert list to it: `lib/backgroundAlerts.ts`'s `syncBackgroundAlerts()`
+    persists the current list to `SharedPreferences` and (re)arms/disarms
+    the WorkManager job every time the list changes (`App.tsx`), and
+    `requestBackgroundAlertsPermission()` asks for Android 13+'s runtime
+    `POST_NOTIFICATIONS` permission (a no-op-success on older Android and
+    on every non-Android platform).
+  - Without that permission granted, the worker still runs and tracks
+    hysteresis correctly, it just skips showing the notification --
+    background alerts degrade to "tracked but not shown," never crash.
+  - **Still a real platform gap, not fully closed:** web/PWA (any OS) and
+    iOS still have no background option — this only exists inside the
+    Capacitor Android shell.
 
 ## Verification
 

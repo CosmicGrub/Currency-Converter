@@ -1,5 +1,57 @@
 # ExchangeBoard — Changelog
 
+## v1.7.0 — 2026-08-26
+
+True background rate alerts on Android — the last item on the standing
+roadmap's "not yet built" list with real architectural weight (see
+`docs/MASTERFILE.md`), closing the gap `docs/FEATURE_ALERTS_AND_PRESETS.md`
+had explicitly flagged since v1.5.0: alerts previously only fired while
+the app/WebView was open.
+
+- **New `RateAlertsScheduler`/`RateAlertsWorker`**
+  (`android/app/src/main/java/.../`) — a periodic `WorkManager` job
+  (15-minute minimum interval, `NetworkType.CONNECTED` constraint) that
+  independently fetches `open.er-api.com`, re-implements the same
+  USD-indexed rate math and armed→triggered hysteresis rule as
+  `src/lib/alerts.ts` (there's no code-sharing path between a WorkManager
+  `Worker` and a WebView's JS bundle), and posts a system notification on
+  a fresh threshold crossing — with the app fully closed. Follows the
+  same "independent native background fetch" pattern already established
+  by the home-screen widget and the Wear OS companion.
+- **New `BackgroundAlertsPlugin`** (Capacitor plugin) bridges the
+  JS-owned alert list to it: persists the current list to
+  `SharedPreferences` and (re)arms/disarms the WorkManager job every time
+  it changes, and requests Android 13+'s runtime `POST_NOTIFICATIONS`
+  permission (a no-op-success on older Android). Without that permission
+  granted, the worker still runs and tracks hysteresis correctly, it just
+  skips showing the notification — degrades to "tracked but not shown,"
+  never crashes.
+- **New `src/lib/backgroundAlerts.ts`**, wired into `App.tsx` (syncs on
+  every `alerts` change) and `Alerts.tsx` (requests the permission on
+  mount, alongside the existing browser-`Notification` permission
+  request) — a no-op everywhere outside the native Android shell, same
+  pattern as `lib/foldState.ts`.
+- **New instrumented test** `RateAlertsSchedulerTest`
+  (`android/app/src/androidTest/`) — verifies `RateAlertsScheduler`
+  actually enqueues/cancels a real `WorkManager` job on a real Android
+  runtime, via `WorkManagerTestInitHelper`. Deliberately doesn't let
+  `RateAlertsWorker.doWork()` itself run (a freshly-enqueued periodic job
+  isn't auto-triggered by WorkManager's own test harness), so this
+  doesn't depend on this CI job having live network access to
+  `open.er-api.com` — it proves the scheduling half deterministically.
+- Still a real platform gap, not fully closed: web/PWA (any OS) and iOS
+  still have no background option — this only exists inside the
+  Capacitor Android shell. `docs/FEATURE_ALERTS_AND_PRESETS.md` updated
+  to describe the split precisely instead of only the old foreground-only
+  scope note.
+
+138/138 tests passing (up from 134 — 4 new: `backgroundAlerts.test.ts`'s
+browser/jsdom-fallback coverage, mirroring `foldState.test.ts`'s pattern),
+`tsc --noEmit` clean, `npm run lint` clean, bundle size 83.41KB gzip
+(+0.08KB). The native additions are new, CI-unverified-until-this-PR's-run
+infrastructure the same way the instrumented-emulator jobs were in
+v1.6.2/v1.6.3 — watching CI closely and ready to iterate.
+
 ## v1.6.3 — 2026-08-25
 
 Real-runtime verification for the native Android/Wear code, and a fixed

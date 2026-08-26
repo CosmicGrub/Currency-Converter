@@ -23,4 +23,8 @@ ext {
     // so it needs this declared directly -- see android/wear/build.gradle.
     androidxTestRunnerVersion = '1.7.0'
     cordovaAndroidVersion = '14.0.1'
+    // Native background rate alerts (see RateAlertsWorker) -- current
+    // stable release, confirmed against developer.android.com/jetpack/
+    // androidx/releases/work, not guessed.
+    workManagerVersion = '2.11.2'
 }
