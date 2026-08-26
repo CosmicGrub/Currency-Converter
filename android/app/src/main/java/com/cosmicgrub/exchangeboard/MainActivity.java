@@ -9,6 +9,7 @@ public class MainActivity extends BridgeActivity {
         // Custom plugins must be registered before super.onCreate() so
         // they're available to the WebView's JS bridge from first load.
         registerPlugin(FoldStatePlugin.class);
+        registerPlugin(BackgroundAlertsPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

@@ -4,6 +4,7 @@ import { CURRENCY_NAMES } from "../data/currencyNames.js";
 import { currentAlertRate, isThresholdCrossed } from "../lib/alerts.js";
 import { genId } from "../lib/id.js";
 import { notify, requestNotificationPermission } from "../lib/notify.js";
+import { requestBackgroundAlertsPermission } from "../lib/backgroundAlerts.js";
 import type { AlertDirection, RateAlert, RateTable } from "../types/index.js";
 
 export interface AlertsProps {
@@ -18,15 +19,19 @@ export interface AlertsProps {
 }
 
 /** Threshold-based rate alerts -- "notify when 1 BASE = TARGET goes above
- *  or below X". Scoped deliberately as foreground/open-app alerts: this
- *  panel re-checks every enabled alert whenever `rates` changes (App.tsx
- *  refreshes periodically while any alert is enabled) and always shows
- *  each alert's live status here, regardless of whether the browser
- *  Notification permission was granted -- the in-app status is the
- *  reliable channel, the system notification is a bonus for when the tab
- *  isn't focused. This is *not* a guaranteed background push when the
- *  app/browser is fully closed -- that would need a native background
- *  job (see docs) and hasn't been built. */
+ *  or below X". This panel itself re-checks every enabled alert whenever
+ *  `rates` changes (App.tsx refreshes periodically while any alert is
+ *  enabled) and always shows each alert's live status here, regardless of
+ *  whether the browser Notification permission was granted -- the in-app
+ *  status is the reliable channel, the browser notification is a bonus
+ *  for when the tab isn't focused. On plain web/PWA/iOS that's the whole
+ *  story: the app/browser has to be open. On Android, App.tsx separately
+ *  mirrors the alert list to a native WorkManager job (see
+ *  lib/backgroundAlerts.ts + docs/FEATURE_ALERTS_AND_PRESETS.md) that
+ *  keeps checking on its own schedule and fires a system notification
+ *  even with the app fully closed -- this component doesn't need to know
+ *  that's happening, it just requests the (Android 13+) notification
+ *  permission that job also relies on. */
 export default function Alerts({
   rates,
   base,
@@ -42,7 +47,8 @@ export default function Alerts({
   const [threshold, setThreshold] = useState("");
 
   useEffect(() => {
-    requestNotificationPermission();
+    requestNotificationPermission(); // browser Notification API (foreground)
+    requestBackgroundAlertsPermission(); // Android POST_NOTIFICATIONS (background) -- no-op outside the native shell
   }, []);
 
   // Re-evaluate every enabled alert whenever the rate table changes.

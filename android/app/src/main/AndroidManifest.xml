@@ -49,4 +49,9 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Runtime-requested on API 33+ (BackgroundAlertsPlugin.requestPermission);
+         a no-op declaration below API 33, where notifications need no
+         runtime grant. Needed for RateAlertsWorker's background-alert
+         notifications to actually show. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

@@ -11,6 +11,7 @@ import { defaultPrefs, prefsReducer } from "./reducers/prefsReducer.js";
 import { useOnlineStatus } from "./hooks/useOnlineStatus.js";
 import { useFoldState } from "./hooks/useFoldState.js";
 import { isFlexMode } from "./lib/foldState.js";
+import { syncBackgroundAlerts } from "./lib/backgroundAlerts.js";
 import Ticker from "./components/Ticker.js";
 import AmountPanel from "./components/AmountPanel.js";
 import CurrencySelect from "./components/CurrencySelect.js";
@@ -165,6 +166,15 @@ export default function App() {
     const id = setInterval(() => loadRates({ silent: true }), ALERT_REFRESH_INTERVAL_MS);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [alerts]);
+
+  // Mirrors the alert list to the native background job (Android only --
+  // a no-op everywhere else, see lib/backgroundAlerts.ts) every time it
+  // changes, so RateAlertsWorker's next scheduled run checks the same
+  // thresholds this session has set, even if the app gets closed a moment
+  // later.
+  useEffect(() => {
+    syncBackgroundAlerts(alerts);
   }, [alerts]);
 
   useEffect(() => {
