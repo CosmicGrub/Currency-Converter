@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher long-press shortcuts: static (not dynamic/pinned) since the
+     three quick pairs below are fixed, not derived from runtime state.
+     Each intent explicitly targets MainActivity (targetPackage/
+     targetClass), so it launches directly rather than going through
+     implicit intent-filter resolution; the `data` URI is parsed on the JS
+     side by src/lib/launchIntent.ts via @capacitor/app's getLaunchUrl()/
+     appUrlOpen (see src/hooks/useLaunchShortcut.ts). -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="convert_usd_eur"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_usd_eur_short"
+        android:shortcutLongLabel="@string/shortcut_usd_eur_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.cosmicgrub.exchangeboard"
+            android:targetClass="com.cosmicgrub.exchangeboard.MainActivity"
+            android:data="com.cosmicgrub.exchangeboard://convert?base=USD&amp;target=EUR" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="convert_usd_gbp"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_usd_gbp_short"
+        android:shortcutLongLabel="@string/shortcut_usd_gbp_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.cosmicgrub.exchangeboard"
+            android:targetClass="com.cosmicgrub.exchangeboard.MainActivity"
+            android:data="com.cosmicgrub.exchangeboard://convert?base=USD&amp;target=GBP" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="convert_usd_jpy"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_usd_jpy_short"
+        android:shortcutLongLabel="@string/shortcut_usd_jpy_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.cosmicgrub.exchangeboard"
+            android:targetClass="com.cosmicgrub.exchangeboard.MainActivity"
+            android:data="com.cosmicgrub.exchangeboard://convert?base=USD&amp;target=JPY" />
+    </shortcut>
+</shortcuts>

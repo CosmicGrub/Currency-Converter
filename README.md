@@ -5,7 +5,7 @@ target currency from a searchable dropdown (full name + ISO code, e.g. "Euro
 (EUR)"), and watch the converted amount update instantly — no "=" button,
 calculator-style live result.
 
-![status](https://img.shields.io/badge/status-v1.6.2-C9A227)
+![status](https://img.shields.io/badge/status-v1.7.1-C9A227)
 
 ## Features
 
@@ -48,7 +48,9 @@ calculator-style live result.
   timestamp, manual refresh, loading/error states
 - Terminal CLI (`npx exchangeboard convert 100 USD EUR`) for scripting/CI use
 - Android home-screen widget, Wear OS companion (Tile + rotary bezel
-  input + ambient mode + watch-face complication on Watch6 Classic)
+  input + ambient mode + watch-face complication on Watch6 Classic),
+  launcher shortcuts (long-press the icon → jump to USD→EUR/GBP/JPY),
+  true background rate alerts (WorkManager, works with the app closed)
 
 ## Tech stack
 
@@ -199,12 +201,14 @@ config (it never had one before — `npm run lint` failed outright) shipped
 in v1.6.1; real-runtime instrumented emulator tests for both native
 modules (`instrumented-app`/`instrumented-wear` CI jobs) plus a precise
 checklist for what still needs real hardware
-(`docs/DEVICE_VERIFICATION_CHECKLIST.md`) shipped in v1.6.2. Open ideas:
-CSV export of the basket, app shortcuts, true background rate alerts via
-a native WorkManager job (see `docs/FEATURE_ALERTS_AND_PRESETS.md`),
-dependency vulnerability scanning and Lighthouse CI (scoped out of v1.6.0
-as process tooling rather than correctness guarantees — see
-`docs/ENGINEERING_HARDENING.md`).
+(`docs/DEVICE_VERIFICATION_CHECKLIST.md`) shipped in v1.6.2/v1.6.3.
+Basket CSV export (v1.6.2), true background rate alerts via a native
+WorkManager job (v1.7.0, see `docs/FEATURE_ALERTS_AND_PRESETS.md`), and
+Android launcher shortcuts (v1.7.1) are all done too. Open ideas: a
+Quick Settings tile (deprioritized — more a general-utility-app
+convention than a currency-app staple), dependency vulnerability
+scanning, and Lighthouse CI (scoped out of v1.6.0 as process tooling
+rather than correctness guarantees — see `docs/ENGINEERING_HARDENING.md`).
 
 ## Android app
 

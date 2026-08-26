@@ -1,7 +1,7 @@
 {
   "name": "exchangeboard",
   "private": true,
-  "version": "1.7.0",
+  "version": "1.7.1",
   "type": "module",
   "description": "ExchangeBoard — a USD-based global currency converter with live, instant conversion.",
   "bin": {
@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
+    "@capacitor/app": "^8.1.1",
     "@capacitor/cli": "^8.5.0",
     "@capacitor/core": "^8.5.0",
     "idb-keyval": "^6.3.0",

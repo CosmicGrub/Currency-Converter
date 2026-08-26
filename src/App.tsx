@@ -10,6 +10,7 @@ import { genId } from "./lib/id.js";
 import { defaultPrefs, prefsReducer } from "./reducers/prefsReducer.js";
 import { useOnlineStatus } from "./hooks/useOnlineStatus.js";
 import { useFoldState } from "./hooks/useFoldState.js";
+import { useLaunchShortcut } from "./hooks/useLaunchShortcut.js";
 import { isFlexMode } from "./lib/foldState.js";
 import { syncBackgroundAlerts } from "./lib/backgroundAlerts.js";
 import Ticker from "./components/Ticker.js";
@@ -99,6 +100,14 @@ export default function App() {
 
   const setBase = (code: string) => dispatch({ type: "SET_BASE", code });
   const setTarget = (code: string) => dispatch({ type: "SET_TARGET", code });
+
+  // Launcher long-press shortcuts (android/app/.../res/xml/shortcuts.xml)
+  // jump straight to a favorite/common pair -- see hooks/useLaunchShortcut.
+  // No-op outside the native Android shell.
+  useLaunchShortcut(({ base, target }) => {
+    setBase(base);
+    setTarget(target);
+  });
   const swap = () => dispatch({ type: "SWAP_PAIR" });
   const toggleFavorite = (code: string) => dispatch({ type: "TOGGLE_FAVORITE", code });
 

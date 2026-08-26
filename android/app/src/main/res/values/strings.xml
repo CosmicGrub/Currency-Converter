@@ -6,4 +6,10 @@
     <string name="custom_url_scheme">com.cosmicgrub.exchangeboard</string>
     <string name="widget_title">EXCHANGE BOARD</string>
     <string name="widget_description">Glanceable USD/EUR, USD/GBP, USD/JPY rates. Tap to open the app.</string>
+    <string name="shortcut_usd_eur_short">USD → EUR</string>
+    <string name="shortcut_usd_eur_long">Convert USD to EUR</string>
+    <string name="shortcut_usd_gbp_short">USD → GBP</string>
+    <string name="shortcut_usd_gbp_long">Convert USD to GBP</string>
+    <string name="shortcut_usd_jpy_short">USD → JPY</string>
+    <string name="shortcut_usd_jpy_long">Convert USD to JPY</string>
 </resources>

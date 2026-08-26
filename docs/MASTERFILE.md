@@ -248,7 +248,11 @@ stale cache on network failure.
   CHANGELOG v1.7.0 and `docs/FEATURE_ALERTS_AND_PRESETS.md`. Still
   foreground-only on web/PWA/iOS — this is Android-only, no backend
   exists to push to the others
-- ⬜ Not yet built: app shortcuts, Quick Settings tile
+- ✅ Android launcher shortcuts (long-press icon → USD→EUR/GBP/JPY) —
+  `android/app/res/xml/shortcuts.xml` + `src/lib/launchIntent.ts` +
+  `src/hooks/useLaunchShortcut.ts`; see CHANGELOG v1.7.1
+- ⬜ Not yet built: Quick Settings tile (deprioritized — more a
+  general-utility-app convention than a currency-app staple)
 
 ## Standing rules for this project
 - Canonical docs: this masterfile + CHANGELOG.md + docs/VISUAL.html —

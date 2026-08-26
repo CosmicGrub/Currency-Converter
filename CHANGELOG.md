@@ -1,5 +1,51 @@
 # ExchangeBoard — Changelog
 
+## v1.7.1 — 2026-08-26
+
+Android launcher shortcuts (long-press the app icon → jump straight to
+USD→EUR/GBP/JPY) — the higher-value half of the last two roadmap items,
+picked over a Quick Settings tile per the same tier/priority/risk pass
+(a QS tile reads more as a general-utility-app convention than a
+currency-app staple, so it's still deprioritized, not abandoned).
+
+- **New `android/app/src/main/res/xml/shortcuts.xml`** — 3 static
+  shortcuts, each an explicit `Intent` targeting `MainActivity` with a
+  `<custom_url_scheme>://convert?base=X&target=Y` data URI. Registered
+  via one additive `<meta-data android:name="android.app.shortcuts">`
+  inside the existing `<activity>` block in `AndroidManifest.xml`.
+- **New `src/lib/launchIntent.ts`** (`parseConvertIntent`) — pure URL
+  parsing, split out from the Capacitor-facing hook so it's trivially
+  unit-testable and returns null on anything malformed rather than
+  throwing.
+- **New `src/hooks/useLaunchShortcut.ts`** — wires `@capacitor/app`'s
+  `getLaunchUrl()` (cold start) and `appUrlOpen` event (warm start,
+  relevant because `MainActivity` is `launchMode="singleTask"`) to
+  `App.tsx`'s existing `setBase`/`setTarget`. No-op outside the native
+  Android shell, matching `useFoldState`'s established pattern exactly
+  (dynamically imports `@capacitor/app` so a plain web/PWA build never
+  pulls it onto the critical path).
+- New dependency: `@capacitor/app@^8.1.1`, matching the existing
+  Capacitor 8.x family.
+- **Caught by the real local Gradle build, not by review**: my first XML
+  comment in `shortcuts.xml` used a `--` prose dash, which the XML spec
+  actually forbids inside comments — aapt2 enforces this strictly and
+  failed the resource-compile step. This is the exact same mistake
+  already fixed once before in the wear module (v1.5.1's CI-caught-bugs
+  list) — a second, independent instance of it, this time caught by
+  running `:app:assembleDebug` locally before pushing rather than
+  waiting on CI.
+- 7 new tests (`launchIntent.test.ts`, mirroring `foldState.test.ts`'s
+  style: well-formed parse, malformed/foreign-URL rejection, missing
+  fields, and a non-throwing guarantee for garbage input).
+
+145/145 tests passing (up from 138), `tsc --noEmit` clean, `npm run
+lint` clean (same 1 pre-existing accepted warning), bundle size
+84.29KB gzip (+0.88KB — `@capacitor/app`'s JS surface is small). Both
+`:app:assembleDebug` and `:wear:assembleDebug` verified locally in
+isolation (a combined single-invocation build hit unrelated transient
+OneDrive file-lock errors on this machine; each module builds clean on
+its own, and CI runs them as separate steps anyway).
+
 ## v1.7.0 — 2026-08-26
 
 True background rate alerts on Android — the last item on the standing
